@@ -3,18 +3,154 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Keep The J</title>
+  <title>Boîte Secrète — Keep The J</title>
   <link rel="stylesheet" href="../style.css">
+  <style>
+    .form-secret { background: var(--blanc); border-radius: var(--rayon); padding: 20px; box-shadow: var(--ombre); margin-bottom: 20px; }
+    .form-secret h2 { margin-bottom: 16px; }
+    .type-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+    .type-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid #ddd; background: var(--blanc); font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--gris); transition: all 0.2s; }
+    .type-btn.actif { border-color: var(--rose-fonce); color: var(--rose-fonce); background: var(--rose-clair); }
+    .boite-card { background: var(--blanc); border-radius: var(--rayon); padding: 18px; box-shadow: var(--ombre); margin-bottom: 14px; border-left: 4px solid var(--rose); }
+    .boite-card.mienne     { border-left-color: var(--rose-fonce); }
+    .boite-card.partenaire { border-left-color: #2a6fc4; }
+    .boite-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .boite-de { font-size: 0.82rem; color: var(--gris); }
+    .boite-statut { font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .statut-ferme  { background: #fde8e8; color: #a32020; }
+    .statut-ouvert { background: #d4f4e2; color: #1a6b3c; }
+    .condition-box { background: var(--gris-clair); border-radius: 8px; padding: 12px; margin-bottom: 12px; font-size: 0.88rem; }
+    .condition-box .label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gris); margin-bottom: 4px; }
+    .contenu-revele { background: var(--rose-clair); border-radius: 8px; padding: 14px; margin-bottom: 12px; font-size: 0.95rem; color: var(--noir); display: none; }
+    .contenu-revele.visible { display: block; }
+    .cadenas { text-align: center; font-size: 2rem; padding: 8px 0; }
+    .boite-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .boite-actions .btn { width: auto; padding: 8px 14px; font-size: 0.85rem; }
+    .vide { text-align: center; padding: 32px 0; color: #bbb; font-size: 0.9rem; }
+    .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; margin-top: 4px; }
+  </style>
 </head>
 <body>
 <div class="container">
+
   <div class="header">
     <a href="../app.html" class="back">←</a>
-    <h1>🚧 En construction</h1>
+    <h1>🔒 Boîte Secrète</h1>
   </div>
-  <div class="card">
-    <p>Ce jeu arrive très bientôt !</p>
+
+  <div class="msg msg-info" style="margin-bottom:20px;">
+    Envoie un message secret. L'autre ne pourra le lire que si tu valides qu'il a rempli ta condition 🔐
   </div>
+
+  <div class="form-secret">
+    <h2>➕ Créer une boîte secrète</h2>
+    <label>Type de contenu</label>
+    <div class="type-toggle">
+      <button class="type-btn actif" id="btn-texte" onclick="setType('texte')">💬 Message</button>
+      <button class="type-btn" id="btn-photo" style="opacity:0.4;cursor:not-allowed;" disabled>📷 Photo (bientôt)</button>
+    </div>
+    <label for="contenu-secret">Ton message secret</label>
+    <textarea id="contenu-secret" placeholder="Ce que l'autre verra une fois la condition remplie…"></textarea>
+    <label for="condition-secret">La condition à remplir</label>
+    <input type="text" id="condition-secret" placeholder="Ex : Envoie-moi un vocal où tu chantes 30 secondes">
+    <div id="msg-form-boite"></div>
+    <button class="btn btn-rose" onclick="creerBoite()">Envoyer la boîte 🔒</button>
+  </div>
+
+  <div class="section-titre">📬 Les boîtes</div>
+  <div id="liste-boites"><div class="spinner">Chargement…</div></div>
+
 </div>
+<script type="module">
+  import { getSession, connecterFirebase } from "../auth.js";
+  import { ecouterJeu, ajouterItem, modifierItem, supprimerItem, lireSalon } from "../db.js";
+
+  const session = getSession();
+  if (!session.code) { window.location.href = "../index.html"; }
+  await connecterFirebase();
+
+  let prenoms = { A: "Joueur A", B: "Joueur B" };
+
+  const salon = await lireSalon(session.code);
+  if (salon) {
+    prenoms.A = salon.joueurA?.prenom ?? "Joueur A";
+    prenoms.B = salon.joueurB?.prenom ?? "Joueur B";
+  }
+
+  window.setType = (type) => {
+    if (type === "photo") return;
+    document.getElementById("btn-texte").classList.toggle("actif", type === "texte");
+  };
+
+  window.creerBoite = async () => {
+    const contenu   = document.getElementById("contenu-secret").value.trim();
+    const condition = document.getElementById("condition-secret").value.trim();
+    const msgEl     = document.getElementById("msg-form-boite");
+    if (!contenu)   { msgEl.innerHTML = `<div class="msg msg-err">Écris ton message secret.</div>`; return; }
+    if (!condition) { msgEl.innerHTML = `<div class="msg msg-err">Définis une condition à remplir.</div>`; return; }
+    try {
+      await ajouterItem(session.code, "jeu_boite", {
+        type: "texte", contenu, condition,
+        auteur: session.role, ouverte: false
+      });
+      document.getElementById("contenu-secret").value   = "";
+      document.getElementById("condition-secret").value = "";
+      msgEl.innerHTML = `<div class="msg msg-ok">Boîte envoyée ! ✓</div>`;
+      setTimeout(() => msgEl.innerHTML = "", 2500);
+    } catch(e) { msgEl.innerHTML = `<div class="msg msg-err">${e.message}</div>`; }
+  };
+
+  window.validerCondition = async (id) => {
+    if (!confirm("Confirmes-tu que la condition a été remplie ? Le message va être révélé !")) return;
+    await modifierItem(session.code, "jeu_boite", id, { ouverte: true });
+  };
+
+  window.supprimerBoite = async (id) => {
+    if (!confirm("Supprimer cette boîte secrète ?")) return;
+    await supprimerItem(session.code, "jeu_boite", id);
+  };
+
+  ecouterJeu(session.code, "jeu_boite", (boites) => {
+    const liste = document.getElementById("liste-boites");
+    if (boites.length === 0) {
+      liste.innerHTML = `<div class="vide">Aucune boîte pour l'instant.<br>Crée le premier secret ! 🔒</div>`;
+      return;
+    }
+    liste.innerHTML = boites.map(b => {
+      const estMienne    = b.auteur === session.role;
+      const classeCard   = estMienne ? "mienne" : "partenaire";
+      const prenomAuteur = b.auteur === "joueurA" ? prenoms.A : prenoms.B;
+      const statutHtml   = b.ouverte
+        ? `<span class="boite-statut statut-ouvert">🔓 Ouverte</span>`
+        : `<span class="boite-statut statut-ferme">🔒 Fermée</span>`;
+      const contenuHtml  = b.ouverte
+        ? `<div class="contenu-revele visible">${b.contenu}</div>`
+        : `<div class="cadenas">🔒</div>`;
+      let actions = "";
+      if (!b.ouverte && estMienne) {
+        actions = `
+          <button class="btn btn-vert"   onclick="validerCondition('${b.id}')">✓ Valider la condition</button>
+          <button class="btn btn-danger" onclick="supprimerBoite('${b.id}')">🗑</button>`;
+      } else if (!b.ouverte && !estMienne) {
+        actions = `<span style="color:var(--gris);font-size:0.82rem;">En attente que ${prenomAuteur} valide…</span>`;
+      } else {
+        actions = `<span style="color:var(--vert);font-size:0.85rem;font-weight:600;">✓ Révélée</span>`;
+      }
+      return `
+        <div class="boite-card ${classeCard}">
+          <div class="boite-header">
+            <span class="boite-de">De <strong>${prenomAuteur}</strong></span>
+            ${statutHtml}
+          </div>
+          <div class="condition-box">
+            <div class="label">🎯 Condition à remplir</div>
+            ${b.condition}
+          </div>
+          ${contenuHtml}
+          <div class="boite-actions">${actions}</div>
+        </div>`;
+    }).join("");
+  });
+</script>
 </body>
 </html>
