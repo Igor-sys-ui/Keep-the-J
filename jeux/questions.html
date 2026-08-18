@@ -3,18 +3,354 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Keep The J</title>
+  <title>Questions de Vie — Keep The J</title>
   <link rel="stylesheet" href="../style.css">
+  <style>
+    /* Banque de questions */
+    .banque { margin-bottom: 24px; }
+    .banque h2 { margin-bottom: 14px; }
+
+    .question-choix {
+      background: var(--blanc);
+      border-radius: var(--rayon);
+      padding: 16px;
+      box-shadow: var(--ombre);
+      margin-bottom: 10px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+      color: var(--noir);
+    }
+    .question-choix:hover  { border-color: var(--rose); background: var(--rose-clair); }
+    .question-choix.selec  { border-color: var(--rose-fonce); background: var(--rose-clair); }
+
+    /* Nouvelle question perso */
+    .form-question {
+      background: var(--blanc);
+      border-radius: var(--rayon);
+      padding: 20px;
+      box-shadow: var(--ombre);
+      margin-bottom: 24px;
+    }
+
+    /* Fil des questions répondues */
+    .qr-card {
+      background: var(--blanc);
+      border-radius: var(--rayon);
+      padding: 18px;
+      box-shadow: var(--ombre);
+      margin-bottom: 16px;
+    }
+    .qr-question {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 14px;
+      color: var(--noir);
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .reponse-bloc { margin-bottom: 10px; }
+    .reponse-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .label-a { color: var(--rose-fonce); }
+    .label-b { color: #2a6fc4; }
+    .reponse-texte {
+      background: var(--gris-clair);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+    }
+    .reponse-attente {
+      background: #fff8e1;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      color: #7a6000;
+      font-style: italic;
+    }
+
+    /* Zone de réponse */
+    .zone-reponse {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #eee;
+    }
+
+    /* Onglets banque / perso */
+    .tabs { display: flex; background: var(--gris-clair); border-radius: var(--rayon); padding: 4px; margin-bottom: 16px; }
+    .tab  { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--gris); transition: all 0.2s; }
+    .tab.actif { background: var(--blanc); color: var(--rose-fonce); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+    .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; }
+    .vide { text-align: center; padding: 32px 0; color: #bbb; font-size: 0.9rem; }
+
+    #panneau-perso { display: none; }
+  </style>
 </head>
 <body>
 <div class="container">
+
   <div class="header">
     <a href="../app.html" class="back">←</a>
-    <h1>🚧 En construction</h1>
+    <h1>💬 Questions de Vie</h1>
   </div>
-  <div class="card">
-    <p>Ce jeu arrive très bientôt !</p>
+
+  <div class="msg msg-info" style="margin-bottom:20px;">
+    Choisis une question ou écris la tienne. Tu verras la réponse de l'autre seulement après avoir répondu ! 💡
   </div>
+
+  <!-- Onglets -->
+  <div class="tabs">
+    <button class="tab actif" onclick="afficherOnglet('banque')">📚 Banque de questions</button>
+    <button class="tab"       onclick="afficherOnglet('perso')">✏️ Ma question</button>
+  </div>
+
+  <!-- BANQUE DE QUESTIONS -->
+  <div id="panneau-banque">
+    <div id="liste-questions-banque"></div>
+    <button class="btn btn-rose" id="btn-envoyer-banque" onclick="envoyerQuestionBanque()" style="display:none; margin-top:8px;">
+      Envoyer cette question 💬
+    </button>
+  </div>
+
+  <!-- QUESTION PERSONNALISÉE -->
+  <div id="panneau-perso">
+    <div class="form-question">
+      <h2>✏️ Poser ma propre question</h2>
+      <label for="ma-question">Ta question</label>
+      <textarea id="ma-question" placeholder="Ex : Si tu pouvais revivre une journée de notre vie, laquelle choisirais-tu ?"></textarea>
+      <label for="ma-reponse-perso">Ta réponse</label>
+      <textarea id="ma-reponse-perso" placeholder="Réponds avant d'envoyer…"></textarea>
+      <div id="msg-form-perso"></div>
+      <button class="btn btn-rose" onclick="envoyerQuestionPerso()">Envoyer 💬</button>
+    </div>
+  </div>
+
+  <hr class="sep">
+
+  <!-- FIL DES QUESTIONS POSÉES -->
+  <div class="section-titre">📖 Questions posées</div>
+  <div id="fil-questions"><div class="spinner">Chargement…</div></div>
+
 </div>
+
+<script type="module">
+  import { getSession, connecterFirebase } from "../auth.js";
+  import { ecouterJeu, ajouterItem, modifierItem, lireSalon } from "../db.js";
+
+  const session = getSession();
+  if (!session.code) { window.location.href = "../index.html"; }
+  await connecterFirebase();
+
+  let prenoms = { A: "Joueur A", B: "Joueur B" };
+  let questionSelectee = null;
+
+  const salon = await lireSalon(session.code);
+  if (salon) {
+    prenoms.A = salon.joueurA?.prenom ?? "Joueur A";
+    prenoms.B = salon.joueurB?.prenom ?? "Joueur B";
+  }
+
+  // --- Banque de questions ---
+  const BANQUE = [
+    "Si tu pouvais dîner avec n'importe qui à travers le monde, qui choisirai-tu ?",
+    "Aimerai-tu être célèbre ? De quelle manière ?",
+    "Avant un coup de téléphone, répétes-tu à chaque fois ce que tu vas dire ? Pourquoi  ?",
+    "Décrit un journée parfaite",
+    "Quand as-tu chanté pour toi-même pour la dernière fois ? Et pour quelqu'un",
+    "Si tu pouvais vivre jusqu’à 90 ans et garder soit l’esprit soit le corps d’un trentenaire pour les soixante dernières années de ta vie, que choisirais-tu ",
+    "As-tu un pressentiment concernant la façon dont tu vas mourir ?",
+    "Cite trois choses qu'on semble avoir en commun.",
+    "Quelle est la chose pour laquelle tu es le plus reconnaissant·e dans la vie ?",
+    "Si tu pouvais changer une chose dans la manière dont tu as été éduqué, qu’est-ce que ce serait ?",
+    "Prends quatre minutes pour raconter ta vie à ton/ta partenaire avec le plus de détails possibles.",
+    "Si tu pouvais te réveiller demain en ayant gagné une qualité ou une compétence, quelle serait-elle ?",
+    "Si une boule de cristal pouvait te dire la vérité sur toi, ta vie, le futur ou n’importe quoi, que voudrais-tu savoir ?",
+    "Est-ce qu’il y a quelque chose dont tu rêves depuis longtemps ? Pourquoi ne l’as-tu pas réalisé ?",
+    "Quel est le plus grand accomplissement de ta vie ?",
+    "Quelle est la chose la plus importante en amitié, selon toi ?",
+    "Quel est ton souvenir le plus précieux ?",
+    "Quel est ton pire souvenir ?",
+    "Si tu savais que tu allais mourir subitement dans un an, changerais-tu quelque chose à ton style de vie ? Pourquoi ?",
+    "Que signifie le mot “amitié” pour toi ?",
+    "Quels rôles jouent l’amour et l’affection dans ta vie ?",
+    "Échange avec ton/ta partenaire quelque chose que tu considères comme une caractéristique positive chez lui/elle. Partage-en cinq au total.",
+    "À quel point ta famille est-elle unie et chaleureuse ? Penses-tu que ton enfance a été plus heureuse que celle de la plupart des gens ?",
+    "Comment juges-tu ta relation avec ta mère ?",
+    "Dites chacun trois vérités commençant par “nous”. Par exemple : “Nous sommes tous les deux dans cette pièce…”",
+    "Complète cette phrase : “J’aimerais avoir quelqu’un pour partager…”",
+    "Si tu devais devenir proche de ton/ta partenaire, dis-lui ce qui serait important qu’il/elle sache.",
+    "Dis à ton/ta partenaire ce que tu aimes chez lui/elle. Sois très honnête et ne dis que des choses que tu ne dirais pas à une personne que tu viens de rencontrer.",
+    "Partage avec ton/ta partenaire un moment embarrassant de ta vie.",
+    "Quand as-tu pleuré devant une autre personne ? Et tout seul ?",
+    "Dis à ton/ta partenaire quelque chose que tu apprécies déjà chez lui/elle.",
+    "Quel sujet est trop sérieux pour en rire, selon toi ?",
+    "Si tu devais mourir ce soir sans avoir l’opportunité de communiquer avec qui que ce soit, que regretterais-tu le plus de ne pas avoir dit ? Pourquoi ne pas l’avoir dit jusqu’à présent ?",
+    "Ta maison, qui contient tout ce qui t’appartient, prend feu. Après avoir sauvé ta famille et tes animaux de compagnie, tu as le temps de récupérer en toute sécurité une seule chose. Qu’est-ce que ce serait ? Pourquoi ?",
+    "La mort de quel membre de ta famille te toucherait le plus ? Pourquoi ?",
+    "Partage un problème personnel et demande à ton/ta partenaire comment il/elle le gérerait. Demande aussi à ton/ta partenaire de te dire comment il/elle pense que tu te sens par rapport à ce problème.", 
+    "Qu'est-ce que tu rêves de faire dans 5 ans ?",
+    "Quelle chanson te fait penser à moi ?",
+    "Quel est ton endroit préféré dans le monde et pourquoi ?",
+    "Quelle est la chose dont tu es le plus fière dans ta vie ?",
+    "Si tu devais me décrire en trois mots, lesquels choisirais-tu ?",
+    "Quel est ton plus grand rêve qu'on n'a jamais réalisé ensemble ?",
+    "Qu'est-ce qui te manque le plus en ce moment ?",
+    "Quelle est la chose la plus courageuse que tu aies jamais faite ?"
+  ];
+
+  // Afficher la banque
+  const banqueEl = document.getElementById("liste-questions-banque");
+  banqueEl.innerHTML = BANQUE.map((q, i) => `
+    <div class="question-choix" onclick="selectionnerQuestion(${i}, this)">${q}</div>
+  `).join("");
+
+  window.selectionnerQuestion = (i, el) => {
+    document.querySelectorAll(".question-choix").forEach(e => e.classList.remove("selec"));
+    el.classList.add("selec");
+    questionSelectee = BANQUE[i];
+    document.getElementById("btn-envoyer-banque").style.display = "block";
+  };
+
+  // --- Onglets ---
+  window.afficherOnglet = (onglet) => {
+    document.getElementById("panneau-banque").style.display = onglet === "banque" ? "block" : "none";
+    document.getElementById("panneau-perso").style.display  = onglet === "perso"  ? "block" : "none";
+    document.querySelectorAll(".tab").forEach((t, i) => {
+      t.classList.toggle("actif", (i === 0 && onglet === "banque") || (i === 1 && onglet === "perso"));
+    });
+  };
+
+  // --- Envoyer une question de la banque ---
+  // Pour la banque : l'envoyeur doit aussi répondre à sa propre question.
+  // On affiche donc un champ de réponse avant d'envoyer.
+  window.envoyerQuestionBanque = () => {
+    if (!questionSelectee) return;
+    const rep = prompt(`Ta réponse à : "${questionSelectee}"`);
+    if (!rep || !rep.trim()) { alert("Tu dois répondre pour envoyer la question !"); return; }
+    envoyer(questionSelectee, rep.trim());
+  };
+
+  // --- Envoyer une question personnalisée ---
+  window.envoyerQuestionPerso = async () => {
+    const question = document.getElementById("ma-question").value.trim();
+    const reponse  = document.getElementById("ma-reponse-perso").value.trim();
+    const msgEl    = document.getElementById("msg-form-perso");
+    if (!question) { msgEl.innerHTML = `<div class="msg msg-err">Écris ta question.</div>`; return; }
+    if (!reponse)  { msgEl.innerHTML = `<div class="msg msg-err">Réponds d'abord à ta propre question !</div>`; return; }
+    await envoyer(question, reponse);
+    document.getElementById("ma-question").value      = "";
+    document.getElementById("ma-reponse-perso").value = "";
+    msgEl.innerHTML = `<div class="msg msg-ok">Question envoyée ! ✓</div>`;
+    setTimeout(() => msgEl.innerHTML = "", 2500);
+  };
+
+  // --- Fonction commune d'envoi ---
+  async function envoyer(question, reponse) {
+    const cleReponse = session.role === "joueurA" ? "reponseA" : "reponseB";
+    await ajouterItem(session.code, "jeu_questions", {
+      question,
+      reponseA: session.role === "joueurA" ? reponse : null,
+      reponseB: session.role === "joueurB" ? reponse : null,
+      auteur: session.role
+    });
+    questionSelectee = null;
+    document.querySelectorAll(".question-choix").forEach(e => e.classList.remove("selec"));
+    document.getElementById("btn-envoyer-banque").style.display = "none";
+  }
+
+  // --- Répondre à une question de l'autre ---
+  window.repondre = async (id) => {
+    const cleReponse = session.role === "joueurA" ? "reponseA" : "reponseB";
+    const rep = document.getElementById(`rep-${id}`).value.trim();
+    if (!rep) { alert("Écris ta réponse avant de valider."); return; }
+    await modifierItem(session.code, "jeu_questions", id, { [cleReponse]: rep });
+  };
+
+  // --- Écouter le fil en temps réel ---
+  ecouterJeu(session.code, "jeu_questions", (questions) => {
+    const fil = document.getElementById("fil-questions");
+
+    if (questions.length === 0) {
+      fil.innerHTML = `<div class="vide">Aucune question posée.<br>Lance la première ! 💬</div>`;
+      return;
+    }
+
+    // Inverser pour avoir les plus récentes en haut
+    [...questions].reverse().forEach(q => {
+      const monRole      = session.role;
+      const cleReponse   = monRole === "joueurA" ? "reponseA" : "reponseB";
+      const cleAutre     = monRole === "joueurA" ? "reponseB" : "reponseA";
+      const prenomMoi    = monRole === "joueurA" ? prenoms.A : prenoms.B;
+      const prenomAutre  = monRole === "joueurA" ? prenoms.B : prenoms.A;
+      const labelMoiCls  = monRole === "joueurA" ? "label-a" : "label-b";
+      const labelAutreCls= monRole === "joueurA" ? "label-b" : "label-a";
+
+      const jaRepondu    = !!q[cleReponse];
+      const autreRepondu = !!q[cleAutre];
+
+      // Bloc ma réponse
+      let maRepHtml = "";
+      if (jaRepondu) {
+        maRepHtml = `
+          <div class="reponse-bloc">
+            <div class="reponse-label ${labelMoiCls}">${prenomMoi}</div>
+            <div class="reponse-texte">${q[cleReponse]}</div>
+          </div>`;
+      } else {
+        // Champ pour répondre
+        maRepHtml = `
+          <div class="zone-reponse">
+            <label style="color:var(--rose-fonce); font-size:0.85rem;">✏️ Ta réponse</label>
+            <textarea id="rep-${q.id}" placeholder="Réponds pour voir celle de l'autre…" style="margin-bottom:8px;"></textarea>
+            <button class="btn btn-rose" onclick="repondre('${q.id}')" style="padding:10px;">Valider ma réponse</button>
+          </div>`;
+      }
+
+      // Bloc réponse de l'autre
+      let autreRepHtml = "";
+      if (!jaRepondu) {
+        // On ne montre pas la réponse de l'autre avant d'avoir répondu
+        autreRepHtml = `<div class="reponse-attente">🔒 Réponds d'abord pour voir la réponse de ${prenomAutre}…</div>`;
+      } else if (autreRepondu) {
+        autreRepHtml = `
+          <div class="reponse-bloc">
+            <div class="reponse-label ${labelAutreCls}">${prenomAutre}</div>
+            <div class="reponse-texte">${q[cleAutre]}</div>
+          </div>`;
+      } else {
+        autreRepHtml = `<div class="reponse-attente">⏳ En attente de la réponse de ${prenomAutre}…</div>`;
+      }
+
+      // Injecter dans le DOM (évite de perdre les champs en cours de frappe)
+      let existant = document.getElementById(`qr-${q.id}`);
+      const html = `
+        <div class="qr-card" id="qr-${q.id}">
+          <div class="qr-question">💬 ${q.question}</div>
+          ${maRepHtml}
+          ${autreRepHtml}
+        </div>`;
+      if (existant) {
+        // Ne remplacer que si pas de textarea en cours de frappe
+        const champ = existant.querySelector("textarea");
+        if (!champ || !champ.value) existant.outerHTML = html;
+      } else {
+        fil.innerHTML += html;
+      }
+    });
+
+    // Nettoyer les cartes supprimées
+    document.querySelectorAll("[id^='qr-']").forEach(el => {
+      const id = el.id.replace("qr-", "");
+      if (!questions.find(q => q.id === id)) el.remove();
+    });
+  });
+</script>
 </body>
 </html>
