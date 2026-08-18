@@ -2,19 +2,499 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Keep The J</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Pictionary — Keep The J</title>
   <link rel="stylesheet" href="../style.css">
+  <style>
+    /* --- Scores --- */
+    .scores { gap: 24px; margin-bottom: 4px; }
+    .score-joueur .pts { color: #90d7ff; }
+
+    /* --- Canvas zone --- */
+    .canvas-wrapper {
+      background: var(--blanc);
+      border-radius: var(--rayon);
+      box-shadow: var(--ombre);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .canvas-wrapper h2 { margin-bottom: 12px; }
+
+    #canvas-dessin {
+      width: 100%;
+      height: 280px;
+      border-radius: 10px;
+      background: #fff;
+      border: 2px dashed #ddd;
+      cursor: crosshair;
+      display: block;
+      touch-action: none; /* important pour le dessin tactile */
+    }
+
+    /* Outils de dessin */
+    .outils {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .couleur-btn {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .couleur-btn.actif { border-color: var(--noir); transform: scale(1.2); }
+    .taille-label { font-size: 0.82rem; color: var(--gris); margin-left: 8px; }
+    input[type="range"] { width: 80px; accent-color: var(--rose-fonce); }
+
+    /* Chrono */
+    .chrono-bar {
+      background: var(--gris-clair);
+      border-radius: 20px;
+      height: 10px;
+      margin: 12px 0 8px;
+      overflow: hidden;
+    }
+    .chrono-fill {
+      height: 100%;
+      border-radius: 20px;
+      background: var(--vert);
+      transition: width 1s linear, background 0.5s;
+    }
+    .chrono-fill.urgent { background: var(--rouge); }
+    .chrono-texte {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--noir);
+      margin-bottom: 10px;
+    }
+    .chrono-texte.urgent { color: var(--rouge); }
+
+    /* Boutons dessin */
+    .dessin-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .dessin-actions .btn { width: auto; padding: 10px 16px; font-size: 0.9rem; }
+
+    /* Souvenir affiché au dessinateur */
+    .souvenir-badge {
+      background: var(--rose-clair);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      font-size: 0.9rem;
+    }
+    .souvenir-badge strong { color: var(--rose-fonce); }
+
+    /* Carte dessin reçu */
+    .dessin-card {
+      background: var(--blanc);
+      border-radius: var(--rayon);
+      padding: 18px;
+      box-shadow: var(--ombre);
+      margin-bottom: 16px;
+      border-left: 4px solid #90d7ff;
+    }
+    .dessin-card.mien { border-left-color: var(--rose-fonce); }
+    .dessin-img {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid #eee;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .dessin-meta { font-size: 0.82rem; color: var(--gris); margin-bottom: 10px; }
+    .dessin-actions-card { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .dessin-actions-card .btn { width: auto; padding: 8px 14px; font-size: 0.85rem; }
+
+    .reponse-tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .tag-attente { background: #fff8e1; color: #7a6000; }
+    .tag-ok      { background: #d4f4e2; color: #1a6b3c; }
+    .tag-non     { background: #fde8e8; color: #a32020; }
+
+    /* Modal fin de chrono */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.visible { display: flex; }
+    .modal {
+      background: var(--blanc);
+      border-radius: var(--rayon);
+      padding: 28px 24px;
+      max-width: 320px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    }
+    .modal h2 { margin-bottom: 12px; }
+    .modal p  { margin-bottom: 20px; color: var(--gris); font-size: 0.9rem; }
+    .modal-actions { display: flex; flex-direction: column; gap: 10px; }
+
+    .vide { text-align: center; padding: 32px 0; color: #bbb; font-size: 0.9rem; }
+    .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; }
+  </style>
 </head>
 <body>
 <div class="container">
+
   <div class="header">
     <a href="../app.html" class="back">←</a>
-    <h1>🚧 En construction</h1>
+    <h1>🎨 Pictionary</h1>
   </div>
+
+  <!-- Scores -->
   <div class="card">
-    <p>Ce jeu arrive très bientôt !</p>
+    <div class="scores" id="scores-zone">
+      <div class="score-joueur">
+        <div class="pts" id="score-a">0</div>
+        <div class="nom" id="nom-score-a">Joueur A</div>
+      </div>
+      <div style="font-size:1.5rem;color:#ddd;align-self:center;">VS</div>
+      <div class="score-joueur">
+        <div class="pts" id="score-b">0</div>
+        <div class="nom" id="nom-score-b">Joueur B</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Zone de dessin (cachée jusqu'au lancement) -->
+  <div id="zone-dessin" style="display:none;">
+    <div class="canvas-wrapper">
+      <h2>🖊️ Dessine ton souvenir</h2>
+      <div class="souvenir-badge" id="souvenir-affiche"></div>
+
+      <!-- Chrono -->
+      <div class="chrono-texte" id="chrono-texte">⏱ 60s</div>
+      <div class="chrono-bar">
+        <div class="chrono-fill" id="chrono-fill" style="width:100%"></div>
+      </div>
+
+      <!-- Canvas -->
+      <canvas id="canvas-dessin" width="700" height="400"></canvas>
+
+      <!-- Outils -->
+      <div class="outils">
+        <span style="font-size:0.82rem;color:var(--gris);">Couleur :</span>
+        <div class="couleur-btn actif" style="background:#1a1a2e;" onclick="setCouleur('#1a1a2e', this)"></div>
+        <div class="couleur-btn" style="background:#c4607a;" onclick="setCouleur('#c4607a', this)"></div>
+        <div class="couleur-btn" style="background:#2a6fc4;" onclick="setCouleur('#2a6fc4', this)"></div>
+        <div class="couleur-btn" style="background:#6bbf8e;" onclick="setCouleur('#6bbf8e', this)"></div>
+        <div class="couleur-btn" style="background:#f4a261;" onclick="setCouleur('#f4a261', this)"></div>
+        <div class="couleur-btn" style="background:#ffffff; border:2px solid #ddd;" onclick="setCouleur('#ffffff', this)" title="Gomme"></div>
+        <span class="taille-label">Taille :</span>
+        <input type="range" id="taille-pinceau" min="2" max="30" value="6" oninput="setTaille(this.value)">
+      </div>
+
+      <!-- Actions -->
+      <div class="dessin-actions">
+        <button class="btn btn-gris"  onclick="effacerCanvas()">🗑 Recommencer</button>
+        <button class="btn btn-rose"  id="btn-poster" onclick="posterDessin()">📤 Poster</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bouton lancer -->
+  <div id="zone-lancer">
+    <div class="form-secret" style="background:var(--blanc);border-radius:var(--rayon);padding:20px;box-shadow:var(--ombre);margin-bottom:20px;">
+      <h2>🎨 Lancer un dessin</h2>
+      <label for="souvenir-input">Le souvenir à dessiner (gardé secret jusqu'à validation)</label>
+      <input type="text" id="souvenir-input" placeholder="Ex : Notre premier pique-nique au parc">
+      <label for="pts-pictionary">Points si trouvé</label>
+      <input type="number" id="pts-pictionary" value="15" min="1" max="999">
+      <div id="msg-lancer"></div>
+      <button class="btn btn-rose" onclick="lancerDessin()">Commencer le chrono ⏱</button>
+    </div>
+  </div>
+
+  <!-- Fil des dessins -->
+  <div class="section-titre">🖼️ Dessins postés</div>
+  <div id="fil-dessins"><div class="spinner">Chargement…</div></div>
+
+</div>
+
+<!-- Modal fin de chrono -->
+<div class="modal-overlay" id="modal-fin">
+  <div class="modal">
+    <h2>⏰ Temps écoulé !</h2>
+    <p>Tu peux poster ton dessin ou recommencer depuis le début.</p>
+    <div class="modal-actions">
+      <button class="btn btn-rose" onclick="posterDepuisModal()">📤 Poster ce dessin</button>
+      <button class="btn btn-gris" onclick="recommencerDepuisModal()">🗑 Recommencer</button>
+    </div>
   </div>
 </div>
+
+<script type="module">
+  import { getSession, connecterFirebase, ecouterSalon } from "../auth.js";
+  import { ecouterJeu, ajouterItem, modifierItem, supprimerItem,
+           mettreAJourScore, lireSalon } from "../db.js";
+
+  const session = getSession();
+  if (!session.code) { window.location.href = "../index.html"; }
+  await connecterFirebase();
+
+  // =====================
+  // VARIABLES GLOBALES
+  // =====================
+  let prenoms       = { A: "Joueur A", B: "Joueur B" };
+  let souvenirEnCours = "";
+  let ptsEnCours      = 15;
+  let chronoInterval  = null;
+  let secondesRestantes = 60; // ← MODIFIE ICI pour changer la durée (en secondes)
+  const DUREE_CHRONO  = 60;   // ← même valeur ici
+
+  // Canvas
+  const canvas = document.getElementById("canvas-dessin");
+  const ctx    = canvas.getContext("2d");
+  let dessinEnCours = false;
+  let couleurActuelle = "#1a1a2e";
+  let tailleActuelle  = 6;
+
+  // =====================
+  // INIT
+  // =====================
+  const salon = await lireSalon(session.code);
+  if (salon) {
+    prenoms.A = salon.joueurA?.prenom ?? "Joueur A";
+    prenoms.B = salon.joueurB?.prenom ?? "Joueur B";
+    document.getElementById("nom-score-a").textContent = prenoms.A;
+    document.getElementById("nom-score-b").textContent = prenoms.B;
+    const sc = salon.scores?.pictionary ?? { A: 0, B: 0 };
+    document.getElementById("score-a").textContent = sc.A;
+    document.getElementById("score-b").textContent = sc.B;
+  }
+
+  // Scores temps réel
+  ecouterSalon(session.code, (data) => {
+    const sc = data.scores?.pictionary ?? { A: 0, B: 0 };
+    document.getElementById("score-a").textContent = sc.A;
+    document.getElementById("score-b").textContent = sc.B;
+  });
+
+  // =====================
+  // CANVAS — DESSIN
+  // =====================
+  ctx.lineCap    = "round";
+  ctx.lineJoin   = "round";
+  ctx.strokeStyle = couleurActuelle;
+  ctx.lineWidth   = tailleActuelle;
+
+  function getPosCanvas(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width  / rect.width;
+    const scaleY = canvas.height / rect.height;
+    if (e.touches) {
+      return {
+        x: (e.touches[0].clientX - rect.left) * scaleX,
+        y: (e.touches[0].clientY - rect.top)  * scaleY
+      };
+    }
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top)  * scaleY
+    };
+  }
+
+  canvas.addEventListener("mousedown",  (e) => { dessinEnCours = true; ctx.beginPath(); const p = getPosCanvas(e); ctx.moveTo(p.x, p.y); });
+  canvas.addEventListener("mousemove",  (e) => { if (!dessinEnCours) return; const p = getPosCanvas(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
+  canvas.addEventListener("mouseup",    ()  => dessinEnCours = false);
+  canvas.addEventListener("mouseleave", ()  => dessinEnCours = false);
+  canvas.addEventListener("touchstart", (e) => { e.preventDefault(); dessinEnCours = true; ctx.beginPath(); const p = getPosCanvas(e); ctx.moveTo(p.x, p.y); }, { passive: false });
+  canvas.addEventListener("touchmove",  (e) => { e.preventDefault(); if (!dessinEnCours) return; const p = getPosCanvas(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }, { passive: false });
+  canvas.addEventListener("touchend",   ()  => dessinEnCours = false);
+
+  window.setCouleur = (couleur, el) => {
+    couleurActuelle  = couleur;
+    ctx.strokeStyle  = couleur;
+    document.querySelectorAll(".couleur-btn").forEach(b => b.classList.remove("actif"));
+    el.classList.add("actif");
+  };
+  window.setTaille = (val) => { tailleActuelle = val; ctx.lineWidth = val; };
+  window.effacerCanvas = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); };
+
+  // =====================
+  // CHRONO
+  // =====================
+  function demarrerChrono() {
+    secondesRestantes = DUREE_CHRONO;
+    mettreAJourAffichageChrono();
+    chronoInterval = setInterval(() => {
+      secondesRestantes--;
+      mettreAJourAffichageChrono();
+      if (secondesRestantes <= 0) {
+        clearInterval(chronoInterval);
+        document.getElementById("modal-fin").classList.add("visible");
+      }
+    }, 1000);
+  }
+
+  function mettreAJourAffichageChrono() {
+    const pct     = (secondesRestantes / DUREE_CHRONO) * 100;
+    const urgent  = secondesRestantes <= 10;
+    const texteEl = document.getElementById("chrono-texte");
+    const fillEl  = document.getElementById("chrono-fill");
+    texteEl.textContent = `⏱ ${secondesRestantes}s`;
+    texteEl.classList.toggle("urgent", urgent);
+    fillEl.style.width = pct + "%";
+    fillEl.classList.toggle("urgent", urgent);
+  }
+
+  function arreterChrono() { clearInterval(chronoInterval); }
+
+  // =====================
+  // ACTIONS JOUEUR
+  // =====================
+  window.lancerDessin = () => {
+    const souvenir = document.getElementById("souvenir-input").value.trim();
+    const pts      = parseInt(document.getElementById("pts-pictionary").value) || 15;
+    const msgEl    = document.getElementById("msg-lancer");
+    if (!souvenir) { msgEl.innerHTML = `<div class="msg msg-err">Écris le souvenir à dessiner.</div>`; return; }
+
+    souvenirEnCours = souvenir;
+    ptsEnCours      = pts;
+
+    document.getElementById("zone-lancer").style.display  = "none";
+    document.getElementById("zone-dessin").style.display  = "block";
+    document.getElementById("souvenir-affiche").innerHTML =
+      `Tu dessines : <strong>${souvenir}</strong> <span style="color:var(--gris);font-size:0.8rem;">(caché à l'autre)</span>`;
+
+    effacerCanvas();
+    demarrerChrono();
+  };
+
+  window.posterDessin = async () => {
+    arreterChrono();
+    document.getElementById("modal-fin").classList.remove("visible");
+    await sauvegarderDessin();
+  };
+
+  window.posterDepuisModal   = () => { document.getElementById("modal-fin").classList.remove("visible"); sauvegarderDessin(); };
+  window.recommencerDepuisModal = () => {
+    document.getElementById("modal-fin").classList.remove("visible");
+    effacerCanvas();
+    demarrerChrono();
+  };
+
+  async function sauvegarderDessin() {
+    // Convertir le canvas en image base64 (pas besoin de Firebase Storage !)
+    const imageData = canvas.toDataURL("image/png");
+    try {
+      await ajouterItem(session.code, "jeu_pictionary", {
+        imageData,
+        souvenir:  souvenirEnCours,
+        points:    ptsEnCours,
+        auteur:    session.role,
+        reponse:   null,   // réponse de l'autre
+        valide:    null    // true=correct, false=faux
+      });
+      // Réinitialiser
+      souvenirEnCours = "";
+      effacerCanvas();
+      document.getElementById("zone-dessin").style.display = "none";
+      document.getElementById("zone-lancer").style.display = "block";
+      document.getElementById("souvenir-input").value = "";
+    } catch(e) {
+      alert("Erreur lors de l'envoi : " + e.message);
+    }
+  }
+
+  // =====================
+  // VALIDATION RÉPONSE
+  // =====================
+  window.validerReponse = async (id, points, auteur, correct) => {
+    const label = correct ? "Bonne réponse ✓" : "Mauvaise réponse ✗";
+    if (!confirm(`Confirmer : ${label} ?`)) return;
+    await modifierItem(session.code, "jeu_pictionary", id, { valide: correct });
+    if (correct) {
+      // Points au devineur (l'autre joueur)
+      const devineur = auteur === "joueurA" ? "joueurB" : "joueurA";
+      await mettreAJourScore(session.code, "pictionary", devineur, points);
+    }
+  };
+
+  window.supprimerDessin = async (id) => {
+    if (!confirm("Supprimer ce dessin ?")) return;
+    await supprimerItem(session.code, "jeu_pictionary", id);
+  };
+
+  // =====================
+  // FIL DES DESSINS
+  // =====================
+  ecouterJeu(session.code, "jeu_pictionary", (dessins) => {
+    const fil = document.getElementById("fil-dessins");
+    if (dessins.length === 0) {
+      fil.innerHTML = `<div class="vide">Aucun dessin pour l'instant.<br>Lance le premier souvenir ! 🎨</div>`;
+      return;
+    }
+
+    fil.innerHTML = [...dessins].reverse().map(d => {
+      const estMien      = d.auteur === session.role;
+      const prenomAuteur = d.auteur === "joueurA" ? prenoms.A : prenoms.B;
+      const prenomMoi    = session.role === "joueurA" ? prenoms.A : prenoms.B;
+
+      // Statut réponse
+      let statutHtml = "";
+      if (d.valide === true)       statutHtml = `<span class="reponse-tag tag-ok">✓ Bonne réponse !</span>`;
+      else if (d.valide === false) statutHtml = `<span class="reponse-tag tag-non">✗ Pas tout à fait…</span>`;
+      else if (d.reponse)          statutHtml = `<span class="reponse-tag tag-attente">⏳ En attente de validation</span>`;
+
+      // Souvenir : visible uniquement si validé ou si c'est l'auteur
+      const souvenirHtml = (estMien || d.valide !== null)
+        ? `<div style="font-size:0.85rem;color:var(--gris);margin-bottom:8px;">🧠 Souvenir : <strong>${d.souvenir}</strong></div>`
+        : "";
+
+      // Actions
+      let actionsHtml = "";
+      if (!estMien && d.valide === null) {
+        // L'autre joueur peut proposer une réponse
+        const champId = `rep-pic-${d.id}`;
+        actionsHtml = `
+          <input type="text" id="${champId}" placeholder="Ta proposition…" style="margin-bottom:8px;">
+          <button class="btn btn-rose" onclick="proposerReponse('${d.id}', '${champId}')" style="padding:10px;">Envoyer ma réponse</button>`;
+      } else if (estMien && d.reponse && d.valide === null) {
+        // L'auteur valide ou rejette
+        actionsHtml = `
+          <div style="margin-bottom:8px;font-size:0.9rem;">Réponse : <strong>${d.reponse}</strong></div>
+          <div class="dessin-actions-card">
+            <button class="btn btn-vert"   onclick="validerReponse('${d.id}', ${d.points}, '${d.auteur}', true)">✓ Correct !</button>
+            <button class="btn btn-danger" onclick="validerReponse('${d.id}', ${d.points}, '${d.auteur}', false)">✗ Pas ça</button>
+          </div>`;
+      } else if (estMien && !d.reponse && d.valide === null) {
+        actionsHtml = `<span style="color:var(--gris);font-size:0.82rem;">En attente de la réponse de l'autre…</span>
+          <button class="btn btn-danger" onclick="supprimerDessin('${d.id}')" style="width:auto;padding:8px 12px;font-size:0.82rem;margin-top:8px;">🗑 Supprimer</button>`;
+      }
+
+      return `
+        <div class="dessin-card ${estMien ? 'mien' : ''}">
+          <div class="dessin-meta">Dessin de <strong>${prenomAuteur}</strong> · ${d.points} pts</div>
+          ${souvenirHtml}
+          <img src="${d.imageData}" class="dessin-img" alt="Dessin">
+          ${statutHtml}
+          ${actionsHtml}
+        </div>`;
+    }).join("");
+  });
+
+  // Répondre à un dessin
+  window.proposerReponse = async (id, champId) => {
+    const rep = document.getElementById(champId).value.trim();
+    if (!rep) { alert("Écris ta réponse d'abord."); return; }
+    await modifierItem(session.code, "jeu_pictionary", id, { reponse: rep });
+  };
+</script>
 </body>
 </html>
