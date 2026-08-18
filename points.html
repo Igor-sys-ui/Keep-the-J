@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Défis & Points — Keep The J</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .scores { gap: 24px; }
+    .score-joueur .pts { color: var(--rose-fonce); }
+
+    /* Formulaire ajout mission */
+    .form-mission {
+      background: var(--blanc);
+      border-radius: var(--rayon);
+      padding: 20px;
+      box-shadow: var(--ombre);
+      margin-bottom: 20px;
+    }
+    .form-mission h2 { margin-bottom: 16px; }
+
+    /* Liste des missions */
+    .mission-card {
+      background: var(--blanc);
+      border-radius: var(--rayon);
+      padding: 16px;
+      box-shadow: var(--ombre);
+      margin-bottom: 12px;
+      border-left: 4px solid #eee;
+    }
+    .mission-card.mienne   { border-left-color: var(--rose-fonce); }
+    .mission-card.partenaire { border-left-color: #2a6fc4; }
+    .mission-card.validee  { opacity: 0.55; }
+
+    .mission-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .mission-texte { font-weight: 600; flex: 1; margin-right: 8px; }
+    .mission-pts {
+      background: #f9c74f;
+      color: #7a5c00;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .mission-meta {
+      font-size: 0.8rem;
+      color: var(--gris);
+      margin-bottom: 10px;
+    }
+    .mission-actions { display: flex; gap: 8px; }
+    .mission-actions .btn {
+      width: auto;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+    }
+
+    /* Filtre */
+    .filtres {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filtre-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1.5px solid #ddd;
+      background: var(--blanc);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--gris);
+    }
+    .filtre-btn.actif {
+      border-color: var(--rose-fonce);
+      color: var(--rose-fonce);
+      background: var(--rose-clair);
+    }
+
+    .vide {
+      text-align: center;
+      padding: 32px 0;
+      color: #bbb;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- En-tête -->
+  <div class="header">
+    <a href="../app.html" class="back">←</a>
+    <h1>🏆 Défis & Points</h1>
+  </div>
+
+  <!-- Scores -->
+  <div class="card">
+    <div class="scores" id="scores-zone">
+      <div class="score-joueur">
+        <div class="pts" id="score-a">0</div>
+        <div class="nom" id="nom-score-a">Joueur A</div>
+      </div>
+      <div style="font-size:1.5rem; color:#ddd; align-self:center;">VS</div>
+      <div class="score-joueur">
+        <div class="pts" id="score-b">0</div>
+        <div class="nom" id="nom-score-b">Joueur B</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire nouvelle mission -->
+  <div class="form-mission">
+    <h2>➕ Proposer une mission</h2>
+    <label for="texte-mission">La mission</label>
+    <textarea id="texte-mission" placeholder="Ex : Envoie-moi une photo de ton sourire avant ce soir…"></textarea>
+
+    <label for="pts-mission">Points si réussie</label>
+    <input type="number" id="pts-mission" placeholder="Ex : 10" min="1" max="999" value="10">
+
+    <div id="msg-form"></div>
+    <button class="btn btn-rose" onclick="ajouterMission()">Envoyer la mission 🚀</button>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filtres">
+    <button class="filtre-btn actif" onclick="filtrer('toutes', this)">Toutes</button>
+    <button class="filtre-btn"       onclick="filtrer('en-cours', this)">En cours</button>
+    <button class="filtre-btn"       onclick="filtrer('validees', this)">Validées ✓</button>
+  </div>
+
+  <!-- Liste des missions -->
+  <div id="liste-missions">
+    <div class="spinner">Chargement…</div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { getSession, connecterFirebase, ecouterSalon } from "../auth.js";
+  import { ecouterJeu, ajouterItem, modifierItem, supprimerItem,
+           mettreAJourScore, lireSalon } from "../db.js";
+
+  const session = getSession();
+  if (!session.code) { window.location.href = "../index.html"; }
+
+  await connecterFirebase();
+
+  let filtreCourant = "toutes";
+  let toutesLesMissions = [];
+  let prenoms = { A: "Joueur A", B: "Joueur B" };
+
+  // Récupérer les prénoms
+  const salon = await lireSalon(session.code);
+  if (salon) {
+    prenoms.A = salon.joueurA?.prenom ?? "Joueur A";
+    prenoms.B = salon.joueurB?.prenom ?? "Joueur B";
+    document.getElementById("nom-score-a").textContent = prenoms.A;
+    document.getElementById("nom-score-b").textContent = prenoms.B;
+    const sc = salon.scores?.points ?? { A: 0, B: 0 };
+    document.getElementById("score-a").textContent = sc.A;
+    document.getElementById("score-b").textContent = sc.B;
+  }
+
+  // Écouter les scores en temps réel
+  ecouterSalon(session.code, (data) => {
+    const sc = data.scores?.points ?? { A: 0, B: 0 };
+    document.getElementById("score-a").textContent = sc.A;
+    document.getElementById("score-b").textContent = sc.B;
+  });
+
+  // Écouter les missions en temps réel
+  ecouterJeu(session.code, "jeu_points", (missions) => {
+    toutesLesMissions = missions;
+    afficherMissions();
+  });
+
+  // --- Ajouter une mission ---
+  window.ajouterMission = async () => {
+    const texte = document.getElementById("texte-mission").value.trim();
+    const pts   = parseInt(document.getElementById("pts-mission").value) || 10;
+    const msgEl = document.getElementById("msg-form");
+
+    if (!texte) {
+      msgEl.innerHTML = `<div class="msg msg-err">Écris une mission d'abord.</div>`;
+      return;
+    }
+
+    try {
+      await ajouterItem(session.code, "jeu_points", {
+        texte,
+        points:  pts,
+        auteur:  session.role,          // "joueurA" ou "joueurB"
+        validee: false,
+        valideeAt: null
+      });
+      document.getElementById("texte-mission").value = "";
+      document.getElementById("pts-mission").value   = "10";
+      msgEl.innerHTML = `<div class="msg msg-ok">Mission envoyée ! ✓</div>`;
+      setTimeout(() => msgEl.innerHTML = "", 2500);
+    } catch (e) {
+      msgEl.innerHTML = `<div class="msg msg-err">${e.message}</div>`;
+    }
+  };
+
+  // --- Valider une mission (l'auteur valide que l'autre a accompli) ---
+  window.validerMission = async (id, points, auteur) => {
+    if (!confirm(`Confirmes-tu que la mission a été accomplie ? (+${points} pts)`)) return;
+    await modifierItem(session.code, "jeu_points", id, {
+      validee: true,
+      valideeAt: new Date().toISOString()
+    });
+    // Les points vont à l'autre joueur (celui qui a accompli la mission)
+    const beneficiaire = auteur === "joueurA" ? "joueurB" : "joueurA";
+    await mettreAJourScore(session.code, "points", beneficiaire, points);
+  };
+
+  // --- Supprimer une mission (seulement l'auteur, si pas validée) ---
+  window.supprimerMission = async (id) => {
+    if (!confirm("Supprimer cette mission ?")) return;
+    await supprimerItem(session.code, "jeu_points", id);
+  };
+
+  // --- Filtre ---
+  window.filtrer = (type, btn) => {
+    filtreCourant = type;
+    document.querySelectorAll(".filtre-btn").forEach(b => b.classList.remove("actif"));
+    btn.classList.add("actif");
+    afficherMissions();
+  };
+
+  // --- Afficher les missions selon le filtre ---
+  function afficherMissions() {
+    const liste = document.getElementById("liste-missions");
+
+    let missions = toutesLesMissions;
+    if (filtreCourant === "en-cours")  missions = missions.filter(m => !m.validee);
+    if (filtreCourant === "validees")  missions = missions.filter(m =>  m.validee);
+
+    if (missions.length === 0) {
+      liste.innerHTML = `<div class="vide">Aucune mission ici.<br>Sois le premier à en proposer une ! 🎯</div>`;
+      return;
+    }
+
+    liste.innerHTML = missions.map(m => {
+      const estMienne    = m.auteur === session.role;
+      const classeCard   = estMienne ? "mienne" : "partenaire";
+      const classeValide = m.validee ? "validee" : "";
+      const prenomAuteur = m.auteur === "joueurA" ? prenoms.A : prenoms.B;
+
+      // Actions disponibles
+      let actions = "";
+      if (!m.validee && estMienne) {
+        // L'auteur peut valider (l'autre a accompli) ou supprimer
+        actions = `
+          <button class="btn btn-vert"   onclick="validerMission('${m.id}', ${m.points}, '${m.auteur}')">✓ Valider</button>
+          <button class="btn btn-danger" onclick="supprimerMission('${m.id}')">🗑</button>
+        `;
+      } else if (m.validee) {
+        actions = `<span style="color:var(--vert); font-size:0.85rem; font-weight:600;">✓ Accomplie</span>`;
+      } else {
+        actions = `<span style="color:var(--gris); font-size:0.82rem;">En attente de validation</span>`;
+      }
+
+      return `
+        <div class="mission-card ${classeCard} ${classeValide}">
+          <div class="mission-header">
+            <span class="mission-texte">${m.texte}</span>
+            <span class="mission-pts">+${m.points} pts</span>
+          </div>
+          <div class="mission-meta">Proposée par <strong>${prenomAuteur}</strong></div>
+          <div class="mission-actions">${actions}</div>
+        </div>
+      `;
+    }).join("");
+  }
+</script>
+</body>
+</html>

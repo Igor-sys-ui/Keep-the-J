@@ -1,0 +1,22 @@
+{
+  "name": "Keep The J",
+  "short_name": "Keep The J",
+  "description": "Jeux interactifs à deux, où que vous soyez",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#f5d5e0",
+  "theme_color": "#c4607a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://emojicdn.elk.sh/%F0%9F%92%8C?style=apple",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://emojicdn.elk.sh/%F0%9F%92%8C?style=apple",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

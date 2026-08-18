@@ -1,0 +1,199 @@
+/* =============================================
+   STYLE GLOBAL — Keep The J
+   Palette : rose poudré + noir doux + blanc
+   Police  : système (rapide, sans téléchargement)
+   ============================================= */
+
+:root {
+  --rose:       #e8a0b4;
+  --rose-clair: #f5d5e0;
+  --rose-fonce: #c4607a;
+  --noir:       #1a1a2e;
+  --gris:       #4a4a6a;
+  --gris-clair: #f0eef5;
+  --blanc:      #ffffff;
+  --vert:       #6bbf8e;
+  --rouge:      #e07070;
+  --rayon:      14px;
+  --ombre:      0 4px 20px rgba(26,26,46,0.10);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--gris-clair);
+  color: var(--noir);
+  min-height: 100vh;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* --- Typographie --- */
+h1 { font-size: 1.8rem; font-weight: 700; color: var(--noir); }
+h2 { font-size: 1.3rem; font-weight: 600; color: var(--noir); }
+h3 { font-size: 1.1rem; font-weight: 600; color: var(--gris); }
+p  { color: var(--gris); }
+
+/* --- Conteneur centré --- */
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+/* --- Carte blanche --- */
+.card {
+  background: var(--blanc);
+  border-radius: var(--rayon);
+  padding: 24px;
+  box-shadow: var(--ombre);
+  margin-bottom: 16px;
+}
+
+/* --- Boutons --- */
+.btn {
+  display: inline-block;
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  border-radius: var(--rayon);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn:active { transform: scale(0.98); opacity: 0.9; }
+
+.btn-rose   { background: var(--rose-fonce); color: var(--blanc); }
+.btn-gris   { background: var(--gris-clair); color: var(--gris); border: 1px solid #ddd; }
+.btn-vert   { background: var(--vert);       color: var(--blanc); }
+.btn-danger { background: var(--rouge);      color: var(--blanc); }
+
+/* --- Champs de saisie --- */
+input[type="text"],
+input[type="number"],
+textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid #ddd;
+  border-radius: var(--rayon);
+  font-size: 1rem;
+  font-family: inherit;
+  background: var(--blanc);
+  color: var(--noir);
+  transition: border-color 0.2s;
+  margin-bottom: 12px;
+}
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--rose-fonce);
+}
+textarea { min-height: 100px; resize: vertical; }
+
+/* --- Labels --- */
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--gris);
+  font-size: 0.9rem;
+}
+
+/* --- En-tête de page --- */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+.header .back {
+  font-size: 1.4rem;
+  text-decoration: none;
+  color: var(--gris);
+}
+.header h1 { font-size: 1.3rem; }
+
+/* --- Badge joueur --- */
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.badge-a { background: var(--rose-clair);  color: var(--rose-fonce); }
+.badge-b { background: #d0eaff;            color: #2a6fc4; }
+
+/* --- Message d'état --- */
+.msg {
+  padding: 12px 16px;
+  border-radius: var(--rayon);
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+.msg-ok  { background: #d4f4e2; color: #1a6b3c; }
+.msg-err { background: #fde8e8; color: #a32020; }
+.msg-info{ background: var(--rose-clair); color: var(--rose-fonce); }
+
+/* --- Chargement --- */
+.spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 120px;
+  color: var(--gris);
+  font-size: 0.95rem;
+}
+
+/* --- Séparateur --- */
+.sep {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 20px 0;
+}
+
+/* --- Grille de jeux (hub) --- */
+.jeux-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.jeu-card {
+  background: var(--blanc);
+  border-radius: var(--rayon);
+  padding: 20px 14px;
+  box-shadow: var(--ombre);
+  text-align: center;
+  text-decoration: none;
+  color: var(--noir);
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid transparent;
+}
+.jeu-card:hover  { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(26,26,46,0.14); }
+.jeu-card:active { transform: scale(0.97); }
+.jeu-card .emoji { font-size: 2.2rem; }
+.jeu-card .nom   { font-weight: 700; font-size: 0.95rem; }
+.jeu-card .desc  { font-size: 0.78rem; color: var(--gris); }
+
+/* --- Score affiché --- */
+.scores {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  padding: 16px 0;
+}
+.score-joueur .pts { font-size: 2.2rem; font-weight: 700; color: var(--rose-fonce); }
+.score-joueur .nom { font-size: 0.85rem; color: var(--gris); margin-top: 2px; }

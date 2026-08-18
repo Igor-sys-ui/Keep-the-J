@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keep The J 💌</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: linear-gradient(160deg, var(--rose-clair) 0%, var(--gris-clair) 60%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .logo .emoji { font-size: 3rem; display: block; margin-bottom: 8px; }
+    .logo h1    { font-size: 2rem; color: var(--rose-fonce); }
+    .logo p     { font-size: 0.9rem; color: var(--gris); margin-top: 4px; }
+
+    /* Onglets Créer / Rejoindre */
+    .tabs {
+      display: flex;
+      background: var(--gris-clair);
+      border-radius: var(--rayon);
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--gris);
+      transition: all 0.2s;
+    }
+    .tab.actif {
+      background: var(--blanc);
+      color: var(--rose-fonce);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    /* Code affiché */
+    .code-affiche {
+      background: var(--rose-clair);
+      border-radius: var(--rayon);
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .code-affiche .code-txt {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--rose-fonce);
+      letter-spacing: 3px;
+    }
+    .code-affiche p { font-size: 0.85rem; color: var(--gris); margin-top: 4px; }
+
+    /* Attente joueur B */
+    #attente {
+      text-align: center;
+      padding: 20px 0;
+      display: none;
+    }
+    #attente .dots::after {
+      content: '';
+      animation: dots 1.5s infinite;
+    }
+    @keyframes dots {
+      0%   { content: ''; }
+      33%  { content: '.'; }
+      66%  { content: '..'; }
+      100% { content: '...'; }
+    }
+
+    #panneau-rejoindre { display: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Logo -->
+  <div class="logo">
+    <span class="emoji">💌</span>
+    <h1>Keep The J</h1>
+    <p>Jeux à deux, où que vous soyez</p>
+  </div>
+
+  <!-- Carte principale -->
+  <div class="card">
+
+    <!-- Onglets -->
+    <div class="tabs">
+      <button class="tab actif" id="tab-creer"    onclick="afficherOnglet('creer')">Créer un salon</button>
+      <button class="tab"       id="tab-rejoindre" onclick="afficherOnglet('rejoindre')">Rejoindre</button>
+    </div>
+
+    <!-- === PANNEAU CRÉER === -->
+    <div id="panneau-creer">
+      <label for="prenom-a">Ton prénom</label>
+      <input type="text" id="prenom-a" placeholder="Ex : Julien" maxlength="20">
+
+      <div id="msg-creer"></div>
+
+      <button class="btn btn-rose" onclick="creer()">Créer le salon 💫</button>
+
+      <!-- Code généré + attente -->
+      <div id="code-zone" style="display:none; margin-top:20px;">
+        <div class="code-affiche">
+          <div class="code-txt" id="code-genere"></div>
+          <p>Partage ce code avec l'autre joueur</p>
+        </div>
+        <div id="attente">
+          <p style="color:var(--gris)">En attente de l'autre joueur<span class="dots"></span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- === PANNEAU REJOINDRE === -->
+    <div id="panneau-rejoindre">
+      <label for="prenom-b">Ton prénom</label>
+      <input type="text" id="prenom-b" placeholder="Ex : Camille" maxlength="20">
+
+      <label for="code-saisie">Code du salon</label>
+      <input type="text" id="code-saisie" placeholder="Ex : LUNE42" maxlength="12"
+             style="text-transform:uppercase; letter-spacing:2px;">
+
+      <div id="msg-rejoindre"></div>
+
+      <button class="btn btn-rose" onclick="rejoindre()">Rejoindre 🚀</button>
+    </div>
+
+  </div><!-- /card -->
+
+  <p style="text-align:center; font-size:0.8rem; color:#bbb; margin-top:8px;">
+    Aucun compte requis · Données sauvegardées automatiquement
+  </p>
+
+</div><!-- /container -->
+
+<script type="module">
+  import { connecterFirebase, creerSalon, rejoindre as rejoindreFirebase,
+           genererCode, ecouterSalon, getSession } from "./auth.js";
+
+  // Si déjà connecté, aller directement au hub
+  const session = getSession();
+  if (session.code && session.role) {
+    window.location.href = "app.html";
+  }
+
+  // Connecter Firebase dès le chargement (silencieux)
+  await connecterFirebase();
+
+  // --- Basculer entre les deux onglets ---
+  window.afficherOnglet = (onglet) => {
+    document.getElementById("panneau-creer").style.display     = onglet === "creer"     ? "block" : "none";
+    document.getElementById("panneau-rejoindre").style.display = onglet === "rejoindre" ? "block" : "none";
+    document.getElementById("tab-creer").classList.toggle("actif",     onglet === "creer");
+    document.getElementById("tab-rejoindre").classList.toggle("actif", onglet === "rejoindre");
+  };
+
+  // --- Créer un salon ---
+  window.creer = async () => {
+    const prenom = document.getElementById("prenom-a").value.trim();
+    const msgEl  = document.getElementById("msg-creer");
+    if (!prenom) { afficherMsg(msgEl, "Saisis ton prénom d'abord.", "err"); return; }
+
+    const code = genererCode();
+    try {
+      await creerSalon(code, prenom);
+      // Afficher le code et attendre joueur B
+      document.getElementById("code-genere").textContent = code;
+      document.getElementById("code-zone").style.display = "block";
+      document.getElementById("attente").style.display   = "block";
+      afficherMsg(msgEl, "", "");
+
+      // Écouter l'arrivée du joueur B
+      const stop = ecouterSalon(code, (data) => {
+        if (data.joueurB !== null) {
+          stop(); // arrêter l'écoute
+          window.location.href = "app.html";
+        }
+      });
+    } catch (e) {
+      afficherMsg(msgEl, e.message, "err");
+    }
+  };
+
+  // --- Rejoindre un salon ---
+  window.rejoindre = async () => {
+    const prenom = document.getElementById("prenom-b").value.trim();
+    const code   = document.getElementById("code-saisie").value.trim().toUpperCase();
+    const msgEl  = document.getElementById("msg-rejoindre");
+    if (!prenom) { afficherMsg(msgEl, "Saisis ton prénom.", "err"); return; }
+    if (!code)   { afficherMsg(msgEl, "Saisis le code du salon.", "err"); return; }
+
+    try {
+      await rejoindreFirebase(code, prenom);
+      window.location.href = "app.html";
+    } catch (e) {
+      afficherMsg(msgEl, e.message, "err");
+    }
+  };
+
+  // Helper affichage message
+  function afficherMsg(el, texte, type) {
+    el.innerHTML = texte
+      ? `<div class="msg msg-${type === "err" ? "err" : "ok"}">${texte}</div>`
+      : "";
+  }
+</script>
+</body>
+</html>
