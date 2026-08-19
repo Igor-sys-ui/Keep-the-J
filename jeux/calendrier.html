@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notre Calendrier — Keep The J</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .form-event { background: var(--blanc); border-radius: var(--rayon); padding: 20px; box-shadow: var(--ombre); margin-bottom: 20px; }
+    .form-event h2 { margin-bottom: 16px; }
+    .type-toggle { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .type-btn { flex: 1; min-width: 80px; padding: 8px; border-radius: 10px; border: 1.5px solid #ddd; background: var(--blanc); font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--gris); text-align: center; transition: all 0.2s; }
+    .type-btn.actif { border-color: var(--rose-fonce); color: var(--rose-fonce); background: var(--rose-clair); }
+    .filtres { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filtre-btn { padding: 6px 14px; border-radius: 20px; border: 1.5px solid #ddd; background: var(--blanc); font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--gris); }
+    .filtre-btn.actif { border-color: var(--rose-fonce); color: var(--rose-fonce); background: var(--rose-clair); }
+    .event-card { background: var(--blanc); border-radius: var(--rayon); padding: 16px; box-shadow: var(--ombre); margin-bottom: 12px; border-left: 4px solid #ddd; display: flex; gap: 14px; align-items: flex-start; }
+    .event-card.appel  { border-left-color: #6bbf8e; }
+    .event-card.facetime { border-left-color: #90d7ff; }
+    .event-card.rdv    { border-left-color: var(--rose); }
+    .event-card.autre  { border-left-color: #b5a0e8; }
+    .event-card.passe  { opacity: 0.55; }
+    .event-date-bloc { text-align: center; min-width: 44px; background: var(--gris-clair); border-radius: 10px; padding: 6px 4px; }
+    .event-date-bloc .jour  { font-size: 1.3rem; font-weight: 700; color: var(--rose-fonce); line-height: 1; }
+    .event-date-bloc .mois  { font-size: 0.7rem; text-transform: uppercase; color: var(--gris); }
+    .event-date-bloc .annee { font-size: 0.68rem; color: var(--gris); }
+    .event-corps { flex: 1; min-width: 0; }
+    .event-titre { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+    .event-desc  { font-size: 0.85rem; color: var(--gris); margin-bottom: 6px; word-break: break-word; }
+    .event-meta  { font-size: 0.75rem; color: #bbb; }
+    .event-badge { font-size: 0.72rem; padding: 2px 8px; border-radius: 20px; font-weight: 600; display: inline-block; margin-bottom: 4px; }
+    .badge-appel    { background: #d4f4e2; color: #1a6b3c; }
+    .badge-facetime { background: #d0eaff; color: #2a6fc4; }
+    .badge-rdv      { background: var(--rose-clair); color: var(--rose-fonce); }
+    .badge-autre    { background: #ede8ff; color: #6a4fc4; }
+    .event-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .event-actions .btn { width: auto; padding: 6px 12px; font-size: 0.78rem; }
+    .countdown { font-size: 0.78rem; font-weight: 700; color: var(--rose-fonce); margin-top: 2px; margin-bottom: 4px; }
+    .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; }
+    .vide { text-align: center; padding: 32px 0; color: #bbb; font-size: 0.9rem; }
+    .stats-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+    .stat-box { flex: 1; background: var(--blanc); border-radius: var(--rayon); padding: 14px 10px; text-align: center; box-shadow: var(--ombre); }
+    .stat-box .val { font-size: 1.6rem; font-weight: 700; color: var(--rose-fonce); }
+    .stat-box .lbl { font-size: 0.72rem; color: var(--gris); margin-top: 2px; }
+
+    /* Noms personnalisables */
+    .config-noms { background: var(--gris-clair); border-radius: var(--rayon); padding: 14px; margin-bottom: 16px; font-size: 0.85rem; }
+    .config-noms summary { cursor: pointer; font-weight: 600; color: var(--gris); }
+    .config-noms .champs { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .config-noms input { flex: 1; min-width: 120px; margin-bottom: 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <a href="../app.html" class="back">←</a>
+    <h1>📅 Notre Calendrier</h1>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-box"><div class="val" id="nb-rdv">0</div><div class="lbl">Rendez-vous</div></div>
+    <div class="stat-box"><div class="val" id="nb-appels">0</div><div class="lbl" id="lbl-appels">Appels</div></div>
+    <div class="stat-box"><div class="val" id="nb-total">0</div><div class="lbl">Total</div></div>
+  </div>
+
+  <!-- Formulaire -->
+  <div class="form-event">
+    <h2>➕ Ajouter une date</h2>
+
+    <!-- Noms personnalisables pour Appel et FaceTime -->
+    <details class="config-noms">
+      <summary>⚙️ Personnaliser les noms des types</summary>
+      <div class="champs">
+        <input type="text" id="nom-appel"    placeholder="Nom du type 1" value="📞 Appel">
+        <input type="text" id="nom-facetime" placeholder="Nom du type 2" value="📹 FaceTime">
+        <button class="btn btn-gris" onclick="sauvegarderNoms()" style="padding:8px 14px;width:auto;">Sauvegarder</button>
+      </div>
+    </details>
+
+    <label>Type</label>
+    <div class="type-toggle">
+      <button class="type-btn actif" id="btn-appel"    onclick="setTypeEvent('appel')">📞 Appel</button>
+      <button class="type-btn"       id="btn-facetime" onclick="setTypeEvent('facetime')">📹 FaceTime</button>
+      <button class="type-btn"       id="btn-rdv"      onclick="setTypeEvent('rdv')">💝 Rendez-vous</button>
+      <button class="type-btn"       id="btn-autre"    onclick="setTypeEvent('autre')">🌿 Autre</button>
+    </div>
+
+    <label for="titre-event">Titre</label>
+    <input type="text" id="titre-event" placeholder="Ex : Appel du soir">
+
+    <label for="date-event">Date</label>
+    <input type="date" id="date-event">
+
+    <label for="heure-event">Heure (optionnel)</label>
+    <input type="time" id="heure-event">
+
+    <label for="desc-event">Note (optionnel)</label>
+    <textarea id="desc-event" placeholder="Un petit mot sur ce moment…" style="min-height:60px;"></textarea>
+
+    <div id="msg-event"></div>
+    <button class="btn btn-rose" onclick="ajouterEvent()">Ajouter au calendrier 📅</button>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filtres">
+    <button class="filtre-btn actif" onclick="filtrer('tous', this)">Tous</button>
+    <button class="filtre-btn" onclick="filtrer('avenir', this)">À venir</button>
+    <button class="filtre-btn" onclick="filtrer('passe', this)">Passés</button>
+  </div>
+
+  <div class="section-titre">📆 Les dates</div>
+  <div id="liste-events"><div class="spinner">Chargement…</div></div>
+
+</div>
+<script type="module">
+  import { getSession, connecterFirebase } from "../auth.js";
+  import { ecouterJeu, ajouterItem, supprimerItem, lireSalon } from "../db.js";
+
+  const session = getSession();
+  if (!session.code) { window.location.href = "../index.html"; }
+  await connecterFirebase();
+
+  let prenoms = { A: "Joueur A", B: "Joueur B" };
+  let typeEventCourant = "appel";
+  let tousLesEvents = [];
+  let filtreCourant = "tous";
+
+  // Noms personnalisables stockés localement
+  let nomAppel    = localStorage.getItem("ktj_nom_appel")    || "📞 Appel";
+  let nomFacetime = localStorage.getItem("ktj_nom_facetime") || "📹 FaceTime";
+
+  const salon = await lireSalon(session.code);
+  if (salon) {
+    prenoms.A = salon.joueurA?.prenom ?? "Joueur A";
+    prenoms.B = salon.joueurB?.prenom ?? "Joueur B";
+  }
+
+  // Appliquer les noms sauvegardés
+  function appliquerNoms() {
+    document.getElementById("btn-appel").textContent    = nomAppel;
+    document.getElementById("btn-facetime").textContent = nomFacetime;
+    document.getElementById("nom-appel").value    = nomAppel;
+    document.getElementById("nom-facetime").value = nomFacetime;
+    document.getElementById("lbl-appels").textContent = nomAppel.replace(/\p{Emoji}/u, "").trim();
+  }
+  appliquerNoms();
+
+  window.sauvegarderNoms = () => {
+    nomAppel    = document.getElementById("nom-appel").value.trim()    || "📞 Appel";
+    nomFacetime = document.getElementById("nom-facetime").value.trim() || "📹 FaceTime";
+    localStorage.setItem("ktj_nom_appel",    nomAppel);
+    localStorage.setItem("ktj_nom_facetime", nomFacetime);
+    appliquerNoms();
+    afficherEvents();
+  };
+
+  // Date et heure du jour par défaut
+  const maintenant = new Date();
+  document.getElementById("date-event").value  = maintenant.toISOString().split("T")[0];
+  document.getElementById("heure-event").value = maintenant.toTimeString().slice(0,5);
+
+  window.setTypeEvent = (type) => {
+    typeEventCourant = type;
+    ["appel","facetime","rdv","autre"].forEach(t => {
+      document.getElementById("btn-" + t).classList.toggle("actif", t === type);
+    });
+  };
+
+  window.ajouterEvent = async () => {
+    const titre = document.getElementById("titre-event").value.trim();
+    const date  = document.getElementById("date-event").value;
+    const heure = document.getElementById("heure-event").value;
+    const desc  = document.getElementById("desc-event").value.trim();
+    const msgEl = document.getElementById("msg-event");
+    if (!titre) { msgEl.innerHTML = `<div class="msg msg-err">Donne un titre à cette date.</div>`; return; }
+    if (!date)  { msgEl.innerHTML = `<div class="msg msg-err">Choisis une date.</div>`; return; }
+    try {
+      await ajouterItem(session.code, "jeu_calendrier", {
+        titre, date, heure, desc,
+        type: typeEventCourant,
+        auteur: session.role
+      });
+      document.getElementById("titre-event").value = "";
+      document.getElementById("desc-event").value  = "";
+      setTypeEvent("appel");
+      msgEl.innerHTML = `<div class="msg msg-ok">Ajouté ! ✓</div>`;
+      setTimeout(() => msgEl.innerHTML = "", 2500);
+    } catch(e) {
+      msgEl.innerHTML = `<div class="msg msg-err">Erreur : ${e.message}</div>`;
+    }
+  };
+
+  // Suppression — tout le monde peut supprimer n'importe quelle entrée
+  window.supprimerEvent = async (id) => {
+    if (!confirm("Supprimer cette date ?")) return;
+    await supprimerItem(session.code, "jeu_calendrier", id);
+  };
+
+  window.filtrer = (type, btn) => {
+    filtreCourant = type;
+    document.querySelectorAll(".filtre-btn").forEach(b => b.classList.remove("actif"));
+    btn.classList.add("actif");
+    afficherEvents();
+  };
+
+  function compteARebours(dateStr, heureStr) {
+    const auj = new Date();
+    const cibleStr = heureStr ? `${dateStr}T${heureStr}:00` : `${dateStr}T00:00:00`;
+    const cible = new Date(cibleStr);
+    const diffMs = cible - auj;
+    if (diffMs < 0) return null;
+    const jours = Math.floor(diffMs / 86400000);
+    const h     = Math.floor((diffMs % 86400000) / 3600000);
+    const m     = Math.floor((diffMs % 3600000)  / 60000);
+    if (jours > 0) return `⏳ Dans ${jours}j ${h}h`;
+    if (h > 0)     return `⏳ Dans ${h}h ${m}min`;
+    if (m > 0)     return `⏳ Dans ${m} minutes`;
+    return "🎉 Maintenant !";
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr + "T00:00:00");
+    const mois = ["jan","fév","mar","avr","mai","juin","jul","aoû","sep","oct","nov","déc"];
+    return { jour: d.getDate(), mois: mois[d.getMonth()], annee: d.getFullYear() };
+  }
+
+  function getBadge(type) {
+    const map = {
+      appel:    { label: nomAppel,    cls: "badge-appel" },
+      facetime: { label: nomFacetime, cls: "badge-facetime" },
+      rdv:      { label: "💝 Rendez-vous", cls: "badge-rdv" },
+      autre:    { label: "🌿 Autre",  cls: "badge-autre" }
+    };
+    return map[type] ?? map.autre;
+  }
+
+  function afficherEvents() {
+    const liste = document.getElementById("liste-events");
+    const auj   = new Date();
+
+    let events = [...tousLesEvents].sort((a, b) => {
+      const da = new Date((a.heure ? `${a.date}T${a.heure}` : `${a.date}T00:00`));
+      const db = new Date((b.heure ? `${b.date}T${b.heure}` : `${b.date}T00:00`));
+      return da - db;
+    });
+
+    if (filtreCourant === "avenir") events = events.filter(e => {
+      const d = new Date(e.heure ? `${e.date}T${e.heure}` : `${e.date}T23:59`);
+      return d >= auj;
+    });
+    if (filtreCourant === "passe") events = events.filter(e => {
+      const d = new Date(e.heure ? `${e.date}T${e.heure}` : `${e.date}T23:59`);
+      return d < auj;
+    });
+
+    // Stats
+    document.getElementById("nb-rdv").textContent    = tousLesEvents.filter(e => e.type === "rdv").length;
+    document.getElementById("nb-appels").textContent = tousLesEvents.filter(e => e.type === "appel" || e.type === "facetime").length;
+    document.getElementById("nb-total").textContent  = tousLesEvents.length;
+
+    if (events.length === 0) {
+      liste.innerHTML = `<div class="vide">Aucune date ici.<br>Ajoute votre prochain rendez-vous ! 📅</div>`;
+      return;
+    }
+
+    liste.innerHTML = events.map(e => {
+      const d            = formatDate(e.date);
+      const prenomAuteur = e.auteur === "joueurA" ? prenoms.A : prenoms.B;
+      const dateObj      = new Date(e.heure ? `${e.date}T${e.heure}` : `${e.date}T23:59`);
+      const estPasse     = dateObj < auj;
+      const badge        = getBadge(e.type);
+      const countdown    = !estPasse ? compteARebours(e.date, e.heure) : null;
+
+      return `
+        <div class="event-card ${e.type} ${estPasse ? "passe" : ""}">
+          <div class="event-date-bloc">
+            <div class="jour">${d.jour}</div>
+            <div class="mois">${d.mois}</div>
+            <div class="annee">${d.annee}</div>
+          </div>
+          <div class="event-corps">
+            <div class="event-badge ${badge.cls}">${badge.label}</div>
+            <div class="event-titre">${e.titre}${e.heure ? ` · ${e.heure}` : ""}</div>
+            ${e.desc ? `<div class="event-desc">${e.desc}</div>` : ""}
+            ${countdown ? `<div class="countdown">${countdown}</div>` : ""}
+            <div class="event-meta">Ajouté par ${prenomAuteur}</div>
+            <div class="event-actions">
+              <button class="btn btn-danger" onclick="supprimerEvent('${e.id}')">🗑 Supprimer</button>
+            </div>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  ecouterJeu(session.code, "jeu_calendrier", (events) => {
+    tousLesEvents = events;
+    afficherEvents();
+  });
+</script>
+</body>
+</html>
