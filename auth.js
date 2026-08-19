@@ -11,11 +11,11 @@
 // Les deux sont ensuite identifiés par leur rôle
 // "joueurA" ou "joueurB" dans Firestore.
 // =============================================
-
+ 
 import { auth, db } from "./firebase-config.js";
 import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 import { doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
-
+ 
 // --- Génère un code de salon aléatoire (ex: "CHAT47") ---
 export function genererCode() {
   const mots = ["LUNE","ETOILE","COEUR","NUAGE","SOLEIL","RIVIERE","FORET","TIGRE","RENARD","HIBOU"];
@@ -23,7 +23,7 @@ export function genererCode() {
   const num = Math.floor(10 + Math.random() * 90); // 10-99
   return mot + num;
 }
-
+ 
 // --- Connexion anonyme Firebase (juste pour avoir un uid) ---
 export async function connecterFirebase() {
   return new Promise((resolve) => {
@@ -37,7 +37,7 @@ export async function connecterFirebase() {
     });
   });
 }
-
+ 
 // --- Créer un nouveau salon (Joueur A) ---
 export async function creerSalon(code, prenomA) {
   const ref = doc(db, "salons", code);
@@ -57,7 +57,7 @@ export async function creerSalon(code, prenomA) {
   localStorage.setItem("ktj_role", "joueurA");
   localStorage.setItem("ktj_prenom", prenomA);
 }
-
+ 
 // --- Rejoindre un salon existant (Joueur B) ---
 export async function rejoindre(code, prenomB) {
   const ref = doc(db, "salons", code);
@@ -76,7 +76,7 @@ export async function rejoindre(code, prenomB) {
   localStorage.setItem("ktj_role", "joueurB");
   localStorage.setItem("ktj_prenom", prenomB);
 }
-
+ 
 // --- Récupérer la session en cours (depuis localStorage) ---
 export function getSession() {
   return {
@@ -85,7 +85,7 @@ export function getSession() {
     prenom: localStorage.getItem("ktj_prenom")
   };
 }
-
+ 
 // --- Écouter en temps réel les changements du salon ---
 // callback(data) est appelé à chaque mise à jour Firestore
 export function ecouterSalon(code, callback) {
@@ -94,7 +94,7 @@ export function ecouterSalon(code, callback) {
     if (snap.exists()) callback(snap.data());
   });
 }
-
+ 
 // --- Déconnexion (efface la session locale) ---
 export function deconnecter() {
   localStorage.removeItem("ktj_code");
@@ -102,3 +102,4 @@ export function deconnecter() {
   localStorage.removeItem("ktj_prenom");
   window.location.href = "index.html";
 }
+ 
