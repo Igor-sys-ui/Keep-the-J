@@ -102,4 +102,3 @@ export function deconnecter() {
   localStorage.removeItem("ktj_prenom");
   window.location.href = "index.html";
 }
- 
