@@ -142,7 +142,7 @@
 
 <script type="module">
   import { getSession, connecterFirebase } from "../auth.js";
-  import { ecouterJeu, ajouterItem, modifierItem, lireSalon } from "../db.js";
+  import { ecouterJeu, ajouterItem, modifierItem, supprimerItem, lireSalon } from "../db.js";
 
   const session = getSession();
   if (!session.code) { window.location.href = "../index.html"; }
@@ -272,7 +272,10 @@
     if (!rep) { alert("Écris ta réponse avant de valider."); return; }
     await modifierItem(session.code, "jeu_questions", id, { [cleReponse]: rep });
   };
-
+  window.supprimerQuestion = async (id) => {
+    if (!confirm("Supprimer cette question et ses réponses ?")) return;
+    await supprimerItem(session.code, "jeu_questions", id);
+ };
   // --- Écouter le fil en temps réel ---
   ecouterJeu(session.code, "jeu_questions", (questions) => {
     const fil = document.getElementById("fil-questions");
@@ -332,7 +335,9 @@
       let existant = document.getElementById(`qr-${q.id}`);
       const html = `
         <div class="qr-card" id="qr-${q.id}">
-          <div class="qr-question">💬 ${q.question}</div>
+          <div class="qr-question">💬 ${q.question}
+            <button onclick="supprimerQuestion('${q.id}')" style="float:right;background:none;border:none;cursor:pointer;font-size:1rem;color:#ddd;">🗑</button>
+          </div>
           ${maRepHtml}
           ${autreRepHtml}
         </div>`;
