@@ -263,9 +263,15 @@
           <button class="btn btn-danger" onclick="supprimerMission('${m.id}')">🗑</button>
         `;
       } else if (m.validee) {
-        actions = `<span style="color:var(--vert); font-size:0.85rem; font-weight:600;">✓ Accomplie</span>`;
+        actions = `
+          <span style="color:var(--vert); font-size:0.85rem; font-weight:600;">✓ Accomplie</span>
+          <button class="btn btn-danger" onclick="supprimerMission('${m.id}')" style="width:auto;padding:6px 10px;font-size:0.78rem;margin-left:8px;">🗑</button>
+  `     ;
       } else {
-        actions = `<span style="color:var(--gris); font-size:0.82rem;">En attente de validation</span>`;
+        actions = `
+          <span style="color:var(--gris); font-size:0.82rem;">En attente de validation</span>
+          <button class="btn btn-danger" onclick="supprimerMission('${m.id}')" style="width:auto;padding:6px 10px;font-size:0.78rem;margin-left:8px;">🗑</button>
+  `    ;
       }
 
       return `
