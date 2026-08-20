@@ -13,41 +13,31 @@
     .salon-info .code-salon { font-size: 0.78rem; color: var(--gris); text-align: right; }
     .salon-info .code-salon span { font-weight: 700; color: var(--rose-fonce); letter-spacing: 1px; }
     .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; margin-top: 8px; }
-
     .jeu-card.points     { border-color: #f9c74f; }
     .jeu-card.boite      { border-color: var(--rose); }
     .jeu-card.pictionary { border-color: #90d7ff; }
     .jeu-card.questions  { border-color: var(--vert); }
     .jeu-card.calendrier { border-color: #f4a261; }
-    .jeu-card.bereal     { border-color: #90d7ff; }
+    .jeu-card.bereal     { border-color: #ff6b9d; }
     .jeu-card.concours   { border-color: #b5a0e8; }
+    .jeu-card.carte      { border-color: #6bbf8e; }
+    .jeu-card.profil     { border-color: #aaa; }
     .jeu-card.escape     { border-color: #aaa; }
-
     .jeu-card.bientot { opacity: 0.5; cursor: default; pointer-events: none; }
     .jeu-card .bientot-badge { font-size: 0.7rem; background: #eee; color: #999; padding: 2px 8px; border-radius: 20px; }
-
     .btn-deco { background: none; border: none; color: var(--gris); font-size: 1.3rem; cursor: pointer; padding: 4px; }
     .statut-partenaire { font-size: 0.82rem; color: var(--gris); text-align: center; margin-bottom: 16px; }
     .statut-partenaire .online  { color: var(--vert); font-weight: 700; }
     .statut-partenaire .attente { color: #f4a261; font-weight: 700; }
-
-    /* Bulles de notification */
     .jeu-card { position: relative; }
     .notif-bulle {
-      position: absolute;
-      top: -8px; right: -8px;
-      background: #e53935;
-      color: white;
-      font-size: 0.72rem;
-      font-weight: 700;
-      min-width: 20px;
-      height: 20px;
-      border-radius: 10px;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 0 5px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      position: absolute; top: -8px; right: -8px;
+      background: #e53935; color: white;
+      font-size: 0.72rem; font-weight: 700;
+      min-width: 20px; height: 20px;
+      border-radius: 10px; display: none;
+      align-items: center; justify-content: center;
+      padding: 0 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       animation: pulse-notif 2s infinite;
     }
     @keyframes pulse-notif {
@@ -99,7 +89,7 @@
       <a href="jeux/pictionary.html" class="jeu-card pictionary" id="card-pictionary">
         <span class="notif-bulle" id="notif-pictionary"></span>
         <span class="emoji">🎨</span>
-        <span class="nom">L'artiste</span>
+        <span class="nom">L'Artiste</span>
         <span class="desc">Dessine un souvenir</span>
       </a>
 
@@ -120,7 +110,7 @@
       <a href="jeux/bereal.html" class="jeu-card bereal" id="card-bereal">
         <span class="notif-bulle" id="notif-bereal"></span>
         <span class="emoji">📸</span>
-        <span class="nom">Be real</span>
+        <span class="nom">Be Real</span>
         <span class="desc">Photo surprise à deux</span>
       </a>
 
@@ -129,6 +119,19 @@
         <span class="emoji">🏅</span>
         <span class="nom">Concours Photo</span>
         <span class="desc">Le meilleur cliché gagne</span>
+      </a>
+
+      <a href="jeux/carte.html" class="jeu-card carte" id="card-carte">
+        <span class="notif-bulle" id="notif-carte"></span>
+        <span class="emoji">🗺️</span>
+        <span class="nom">Notre Carte</span>
+        <span class="desc">Lieux où aller ensemble</span>
+      </a>
+
+      <a href="jeux/profil.html" class="jeu-card profil">
+        <span class="emoji">👤</span>
+        <span class="nom">Profils</span>
+        <span class="desc">Scores & statistiques</span>
       </a>
 
       <a href="jeux/escape.html" class="jeu-card escape bientot">
@@ -165,17 +168,29 @@
     if (!data.joueurB) {
       statutEl.innerHTML = `<span class="attente">⏳ En attente que l'autre joueur rejoigne…</span><br>Code : <strong>${session.code}</strong>`;
     } else {
-      const partenairePrenom = session.role === "joueurA" ? data.joueurB.prenom : data.joueurA.prenom;
-      statutEl.innerHTML = `<span class="online">✓</span> ${partenairePrenom} est dans le salon`;
+      const p = session.role === "joueurA" ? data.joueurB.prenom : data.joueurA.prenom;
+      statutEl.innerHTML = `<span class="online">✓</span> ${p} est dans le salon`;
     }
   });
 
-  // ===== NOTIFICATIONS =====
+  // ===== BADGE ICÔNE + BULLES =====
+  const comptesParJeu = {};
+
+  function majBadgeIcone() {
+    const total = Object.values(comptesParJeu).reduce((a, b) => a + b, 0);
+    if ("setAppBadge" in navigator) {
+      if (total > 0) navigator.setAppBadge(total);
+      else navigator.clearAppBadge();
+    }
+  }
+
   function afficherBulle(id, nb) {
     const el = document.getElementById(id);
     if (!el) return;
     el.textContent = nb > 9 ? "9+" : String(nb);
     el.style.display = nb > 0 ? "flex" : "none";
+    comptesParJeu[id.replace("notif-", "")] = nb;
+    majBadgeIcone();
   }
 
   function getVus(jeu) {
@@ -183,9 +198,13 @@
     catch { return new Set(); }
   }
 
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) majBadgeIcone();
+  });
+
   const role = session.role;
 
-  // Défis & Points : missions de l'autre non validées
+  // Défis : missions de l'autre non validées
   ecouterJeu(session.code, "jeu_points", (items) => {
     const vus = getVus("points");
     const n = items.filter(m => m.auteur !== role && !m.validee && !vus.has(m.id)).length;
@@ -199,17 +218,19 @@
     afficherBulle("notif-boite", n);
   });
 
-  // Pictionary : dessins reçus sans réponse
+  // L'Artiste : dessins reçus sans réponse
   ecouterJeu(session.code, "jeu_pictionary", (items) => {
     const vus = getVus("pictionary");
-    const n = items.filter(d => d.auteur !== role && d.valide === null && !d.reponse && !vus.has(d.id)).length;
+    const n = items.filter(d =>
+      d.auteur !== role && d.valide === null && !d.reponse && !vus.has(d.id)
+    ).length;
     afficherBulle("notif-pictionary", n);
   });
 
-  // Questions : sans ma réponse OU réponse de l'autre disponible
+  // 36 Questions : sans ma réponse OU réponse de l'autre dispo
   ecouterJeu(session.code, "jeu_questions", (items) => {
-    const vus = getVus("questions");
-    const cleMoi   = role === "joueurA" ? "reponseA" : "reponseB";
+    const vus    = getVus("questions");
+    const cleMoi = role === "joueurA" ? "reponseA" : "reponseB";
     const cleAutre = role === "joueurA" ? "reponseB" : "reponseA";
     const n = items.filter(q => {
       if (vus.has(q.id)) return false;
@@ -227,7 +248,7 @@
     afficherBulle("notif-calendrier", n);
   });
 
-  // Notre Moment : moment actif où je n'ai pas posté
+  // Be Real : moment actif où je n'ai pas posté
   ecouterJeu(session.code, "jeu_bereal", (items) => {
     const DUREE_MS = 2 * 60 * 60 * 1000;
     const actif = items.find(m => !m.expire && (Date.now() - m.lanceAt) < DUREE_MS);
@@ -236,24 +257,28 @@
     afficherBulle("notif-bereal", maPhoto ? 0 : 1);
   });
 
-  // Concours Photo : nouveaux concours ou photos à voter
+  // Concours Photo : photo à poster ou vote en attente
   ecouterJeu(session.code, "jeu_concours", (items) => {
     const vus = getVus("concours");
-    const monVoteCle = role === "joueurA" ? "voteA" : "voteB";
     const maPhotoCle = role === "joueurA" ? "photoA" : "photoB";
+    const monVoteCle = role === "joueurA" ? "voteA"  : "voteB";
     const n = items.filter(c => {
-      if (vus.has(c.id)) return false;
-      if (c.termine) return false;
-      // Pas encore posté ma photo
+      if (c.termine || vus.has(c.id)) return false;
       if (!c[maPhotoCle]) return true;
-      // Les deux ont posté mais je n'ai pas voté
       if (c.photoA && c.photoB && !c[monVoteCle]) return true;
       return false;
     }).length;
     afficherBulle("notif-concours", n);
   });
 
-  // Effacer les notifs quand on clique sur un jeu
+  // Notre Carte : nouveaux points de l'autre
+  ecouterJeu(session.code, "jeu_carte", (items) => {
+    const vus = getVus("carte");
+    const n = items.filter(p => p.auteur !== role && !vus.has(p.id)).length;
+    afficherBulle("notif-carte", n);
+  });
+
+  // Effacer les notifs au clic sur un jeu
   document.querySelectorAll(".jeu-card[id]").forEach(card => {
     card.addEventListener("click", () => {
       const jeu = card.id.replace("card-", "");
