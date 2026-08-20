@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notre Carte — Keep The J</title>
+  <link rel="stylesheet" href="../style.css">
+  <!-- Leaflet.js — carte interactive gratuite -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    /* La carte prend toute la hauteur */
+    #map {
+      width: 100%;
+      height: 55vh;
+      border-radius: var(--rayon);
+      box-shadow: var(--ombre);
+      margin-bottom: 16px;
+      z-index: 1;
+    }
+
+    /* Formulaire ajout point */
+    .form-point { background: var(--blanc); border-radius: var(--rayon); padding: 18px; box-shadow: var(--ombre); margin-bottom: 16px; }
+    .form-point h2 { margin-bottom: 12px; }
+    .coord-affiche { background: var(--gris-clair); border-radius: 8px; padding: 10px 14px; font-size: 0.82rem; color: var(--gris); margin-bottom: 12px; }
+    .coord-affiche strong { color: var(--rose-fonce); }
+
+    /* Liste des points */
+    .point-card { background: var(--blanc); border-radius: var(--rayon); padding: 14px; box-shadow: var(--ombre); margin-bottom: 10px; border-left: 4px solid var(--rose); cursor: pointer; transition: transform 0.15s; }
+    .point-card.autre { border-left-color: #2a6fc4; }
+    .point-card:hover { transform: translateX(4px); }
+    .point-nom { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; }
+    .point-msg { font-size: 0.85rem; color: var(--gris); margin-bottom: 6px; }
+    .point-meta { font-size: 0.72rem; color: #bbb; display: flex; justify-content: space-between; align-items: center; }
+    .point-actions { display: flex; gap: 6px; margin-top: 8px; }
+    .point-actions .btn { width: auto; padding: 5px 10px; font-size: 0.78rem; }
+
+    /* Popup Leaflet */
+    .leaflet-popup-content { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-width: 160px; }
+    .popup-nom { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+    .popup-msg { font-size: 0.85rem; color: #555; margin-bottom: 4px; }
+    .popup-auteur { font-size: 0.72rem; color: #999; }
+
+    .instructions { background: var(--rose-clair); border-radius: var(--rayon); padding: 12px 14px; font-size: 0.85rem; color: var(--rose-fonce); margin-bottom: 14px; text-align: center; }
+
+    .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 10px; }
+    .vide { text-align: center; padding: 24px 0; color: #bbb; font-size: 0.9rem; }
+
+    /* Légende */
+    .legende { display: flex; gap: 14px; margin-bottom: 12px; font-size: 0.78rem; }
+    .legende-item { display: flex; align-items: center; gap: 5px; color: var(--gris); }
+    .legende-dot { width: 12px; height: 12px; border-radius: 50%; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <a href="../app.html" class="back">←</a>
+    <h1>🗺️ Notre Carte</h1>
+  </div>
+
+  <div class="instructions" id="instructions">
+    👆 Appuie sur la carte pour poser un point à un endroit où tu voudrais aller
+  </div>
+
+  <!-- Carte -->
+  <div id="map"></div>
+
+  <!-- Légende -->
+  <div class="legende">
+    <div class="legende-item">
+      <div class="legende-dot" style="background:var(--rose-fonce);"></div>
+      <span id="legende-moi">Moi</span>
+    </div>
+    <div class="legende-item">
+      <div class="legende-dot" style="background:#2a6fc4;"></div>
+      <span id="legende-autre">L'autre</span>
+    </div>
+    <div class="legende-item">
+      <div class="legende-dot" style="background:#6bbf8e;"></div>
+      <span>Commun</span>
+    </div>
+  </div>
+
+  <!-- Formulaire (apparaît après clic sur la carte) -->
+  <div class="form-point" id="form-point" style="display:none;">
+    <h2>📍 Ajouter ce lieu</h2>
+    <div class="coord-affiche" id="coord-affiche">Aucun lieu sélectionné</div>
+    <label for="nom-lieu">Nom du lieu</label>
+    <input type="text" id="nom-lieu" placeholder="Ex : Kyoto, Iceland, Santorini…">
+    <label for="msg-lieu">Pourquoi ce lieu ? (optionnel)</label>
+    <textarea id="msg-lieu" placeholder="Ce qui t'attire là-bas, un rêve, un projet…" style="min-height:70px;"></textarea>
+    <div id="msg-form-carte"></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-rose" onclick="ajouterPoint()">Ajouter 📍</button>
+      <button class="btn btn-gris" onclick="annulerPoint()">Annuler</button>
+    </div>
+  </div>
+
+  <!-- Liste des points -->
+  <div class="section-titre">📍 Les lieux (<span id="nb-points">0</span>)</div>
+  <div id="liste-points"><div class="spinner">Chargement…</div></div>
+
+</div>
+
+<script type="module">
+  import { getSession, connecterFirebase } from "../auth.js";
+  import { ecouterJeu, ajouterItem, supprimerItem, lireSalon } from "../db.js";
+
+  const session = getSession();
+  if (!session.code) { window.location.href = "../index.html"; }
+  await connecterFirebase();
+
+  let prenoms = { A: "Joueur A", B: "Joueur B" };
+  let latEnCours = null, lngEnCours = null;
+  let marqueurs = {}; // { id: marqueur Leaflet }
+
+  const salon = await lireSalon(session.code);
+  if (salon) {
+    prenoms.A = salon.joueurA?.prenom ?? "Joueur A";
+    prenoms.B = salon.joueurB?.prenom ?? "Joueur B";
+  }
+
+  const prenomMoi   = session.role === "joueurA" ? prenoms.A : prenoms.B;
+  const prenomAutre = session.role === "joueurA" ? prenoms.B : prenoms.A;
+  document.getElementById("legende-moi").textContent   = prenomMoi;
+  document.getElementById("legende-autre").textContent = prenomAutre;
+
+  // =====================
+  // INIT CARTE
+  // =====================
+  const map = L.map("map").setView([20, 10], 2);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap",
+    maxZoom: 18
+  }).addTo(map);
+
+  // Icônes colorées
+  function creerIcone(couleur) {
+    return L.divIcon({
+      className: "",
+      html: `<div style="width:20px;height:20px;background:${couleur};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+      iconSize: [20, 20],
+      iconAnchor: [10, 20],
+      popupAnchor: [0, -22]
+    });
+  }
+  const icones = {
+    moi:    creerIcone("var(--rose-fonce)") ,
+    autre:  creerIcone("#2a6fc4"),
+    commun: creerIcone("#6bbf8e")
+  };
+
+  // Clic sur la carte → sélectionner un lieu
+  map.on("click", (e) => {
+    latEnCours = e.latlng.lat.toFixed(4);
+    lngEnCours = e.latlng.lng.toFixed(4);
+    document.getElementById("form-point").style.display = "block";
+    document.getElementById("instructions").style.display = "none";
+    document.getElementById("coord-affiche").innerHTML =
+      `Lieu sélectionné : <strong>${latEnCours}, ${lngEnCours}</strong>`;
+    document.getElementById("nom-lieu").focus();
+    // Scroll vers le formulaire
+    document.getElementById("form-point").scrollIntoView({ behavior: "smooth" });
+  });
+
+  // =====================
+  // AJOUTER UN POINT
+  // =====================
+  window.ajouterPoint = async () => {
+    const nom = document.getElementById("nom-lieu").value.trim();
+    const msg = document.getElementById("msg-lieu").value.trim();
+    const msgEl = document.getElementById("msg-form-carte");
+    if (!nom)         { msgEl.innerHTML = `<div class="msg msg-err">Donne un nom à ce lieu.</div>`; return; }
+    if (!latEnCours)  { msgEl.innerHTML = `<div class="msg msg-err">Sélectionne d'abord un lieu sur la carte.</div>`; return; }
+    try {
+      await ajouterItem(session.code, "jeu_carte", {
+        nom, msg,
+        lat: parseFloat(latEnCours),
+        lng: parseFloat(lngEnCours),
+        auteur: session.role
+      });
+      document.getElementById("nom-lieu").value  = "";
+      document.getElementById("msg-lieu").value  = "";
+      latEnCours = lngEnCours = null;
+      document.getElementById("form-point").style.display = "none";
+      document.getElementById("instructions").style.display = "block";
+      msgEl.innerHTML = "";
+    } catch(e) {
+      msgEl.innerHTML = `<div class="msg msg-err">Erreur : ${e.message}</div>`;
+    }
+  };
+
+  window.annulerPoint = () => {
+    latEnCours = lngEnCours = null;
+    document.getElementById("form-point").style.display = "none";
+    document.getElementById("instructions").style.display = "block";
+    document.getElementById("msg-form-carte").innerHTML = "";
+  };
+
+  // =====================
+  // SUPPRIMER
+  // =====================
+  window.supprimerPoint = async (id) => {
+    if (!confirm("Supprimer ce lieu ?")) return;
+    await supprimerItem(session.code, "jeu_carte", id);
+  };
+
+  // Centrer sur un point depuis la liste
+  window.centrerSur = (lat, lng) => {
+    map.setView([lat, lng], 6, { animate: true });
+  };
+
+  // =====================
+  // ÉCOUTE ET AFFICHAGE
+  // =====================
+  ecouterJeu(session.code, "jeu_carte", (points) => {
+    document.getElementById("nb-points").textContent = points.length;
+
+    // Mettre à jour les marqueurs sur la carte
+    // Supprimer les marqueurs qui n'existent plus
+    Object.keys(marqueurs).forEach(id => {
+      if (!points.find(p => p.id === id)) {
+        marqueurs[id].remove();
+        delete marqueurs[id];
+      }
+    });
+
+    // Ajouter les nouveaux marqueurs
+    points.forEach(p => {
+      if (marqueurs[p.id]) return; // déjà sur la carte
+      const estMien = p.auteur === session.role;
+      const icone   = estMien ? icones.moi : icones.autre;
+      const prenomA = p.auteur === "joueurA" ? prenoms.A : prenoms.B;
+      const m = L.marker([p.lat, p.lng], { icon: icone })
+        .addTo(map)
+        .bindPopup(`
+          <div class="popup-nom">📍 ${p.nom}</div>
+          ${p.msg ? `<div class="popup-msg">${p.msg}</div>` : ""}
+          <div class="popup-auteur">Ajouté par ${prenomA}</div>
+        `);
+      marqueurs[p.id] = m;
+    });
+
+    // Liste des points
+    const liste = document.getElementById("liste-points");
+    if (points.length === 0) {
+      liste.innerHTML = `<div class="vide">Aucun lieu encore.<br>Appuie sur la carte pour ajouter le premier ! 🗺️</div>`;
+      return;
+    }
+
+    // Trier : mes points d'abord, puis ceux de l'autre
+    const tries = [...points].sort((a, b) => {
+      if (a.auteur === session.role && b.auteur !== session.role) return -1;
+      if (b.auteur === session.role && a.auteur !== session.role) return 1;
+      return 0;
+    });
+
+    liste.innerHTML = tries.map(p => {
+      const estMien      = p.auteur === session.role;
+      const prenomAuteur = p.auteur === "joueurA" ? prenoms.A : prenoms.B;
+      return `
+        <div class="point-card ${estMien ? "" : "autre"}" onclick="centrerSur(${p.lat}, ${p.lng})">
+          <div class="point-nom">📍 ${p.nom}</div>
+          ${p.msg ? `<div class="point-msg">${p.msg}</div>` : ""}
+          <div class="point-meta">
+            <span>Ajouté par <strong>${prenomAuteur}</strong></span>
+            <span>${p.lat.toFixed(2)}, ${p.lng.toFixed(2)}</span>
+          </div>
+          <div class="point-actions">
+            <button class="btn btn-danger" onclick="event.stopPropagation(); supprimerPoint('${p.id}')">🗑</button>
+          </div>
+        </div>`;
+    }).join("");
+  });
+</script>
+</body>
+</html>
