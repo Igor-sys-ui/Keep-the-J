@@ -6,198 +6,261 @@
   <title>Keep The J — Hub</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     .top-bar h1 { font-size: 1.5rem; color: var(--rose-fonce); }
- 
-    .salon-info {
-      background: var(--blanc);
-      border-radius: var(--rayon);
-      padding: 16px 20px;
-      box-shadow: var(--ombre);
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+    .salon-info { background: var(--blanc); border-radius: var(--rayon); padding: 16px 20px; box-shadow: var(--ombre); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
     .salon-info .joueurs { display: flex; gap: 10px; align-items: center; }
-    .salon-info .code-salon {
-      font-size: 0.78rem;
-      color: var(--gris);
-      text-align: right;
-    }
-    .salon-info .code-salon span {
-      font-weight: 700;
-      color: var(--rose-fonce);
-      letter-spacing: 1px;
-    }
- 
-    .section-titre {
-      font-size: 0.8rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--gris);
-      margin-bottom: 12px;
-      margin-top: 8px;
-    }
- 
-    /* Couleurs par jeu */
+    .salon-info .code-salon { font-size: 0.78rem; color: var(--gris); text-align: right; }
+    .salon-info .code-salon span { font-weight: 700; color: var(--rose-fonce); letter-spacing: 1px; }
+    .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; margin-top: 8px; }
+
     .jeu-card.points     { border-color: #f9c74f; }
     .jeu-card.boite      { border-color: var(--rose); }
     .jeu-card.pictionary { border-color: #90d7ff; }
     .jeu-card.questions  { border-color: var(--vert); }
-    .jeu-card.escape     { border-color: #b5a0e8; }
- 
-    .jeu-card.bientot {
-      opacity: 0.5;
-      cursor: default;
-      pointer-events: none;
-    }
-    .jeu-card .bientot-badge {
-      font-size: 0.7rem;
-      background: #eee;
-      color: #999;
-      padding: 2px 8px;
-      border-radius: 20px;
-    }
- 
-    /* Bouton déconnexion */
-    .btn-deco {
-      background: none;
-      border: none;
-      color: var(--gris);
-      font-size: 1.3rem;
-      cursor: pointer;
-      padding: 4px;
-    }
- 
-    /* Statut connexion partenaire */
-    .statut-partenaire {
-      font-size: 0.82rem;
-      color: var(--gris);
-      text-align: center;
-      margin-bottom: 16px;
-    }
+    .jeu-card.calendrier { border-color: #f4a261; }
+    .jeu-card.bereal     { border-color: #90d7ff; }
+    .jeu-card.concours   { border-color: #b5a0e8; }
+    .jeu-card.escape     { border-color: #aaa; }
+
+    .jeu-card.bientot { opacity: 0.5; cursor: default; pointer-events: none; }
+    .jeu-card .bientot-badge { font-size: 0.7rem; background: #eee; color: #999; padding: 2px 8px; border-radius: 20px; }
+
+    .btn-deco { background: none; border: none; color: var(--gris); font-size: 1.3rem; cursor: pointer; padding: 4px; }
+    .statut-partenaire { font-size: 0.82rem; color: var(--gris); text-align: center; margin-bottom: 16px; }
     .statut-partenaire .online  { color: var(--vert); font-weight: 700; }
     .statut-partenaire .attente { color: #f4a261; font-weight: 700; }
+
+    /* Bulles de notification */
+    .jeu-card { position: relative; }
+    .notif-bulle {
+      position: absolute;
+      top: -8px; right: -8px;
+      background: #e53935;
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 700;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      animation: pulse-notif 2s infinite;
+    }
+    @keyframes pulse-notif {
+      0%,100% { transform: scale(1); }
+      50%      { transform: scale(1.15); }
+    }
   </style>
 </head>
 <body>
 <div class="container">
- 
-  <!-- Barre du haut -->
+
   <div class="top-bar">
     <h1>💌 Keep The J</h1>
     <button class="btn-deco" onclick="deconnecterSession()" title="Quitter">🚪</button>
   </div>
- 
-  <!-- Chargement -->
+
   <div id="chargement" class="spinner">Connexion en cours…</div>
- 
-  <!-- Contenu principal (caché pendant le chargement) -->
+
   <div id="contenu" style="display:none">
- 
-    <!-- Infos salon -->
+
     <div class="salon-info">
       <div class="joueurs">
         <span class="badge badge-a" id="nom-a">—</span>
         <span style="color:#ccc">♥</span>
         <span class="badge badge-b" id="nom-b">—</span>
       </div>
-      <div class="code-salon">
-        Code salon<br>
-        <span id="code-affiche">—</span>
-      </div>
+      <div class="code-salon">Code salon<br><span id="code-affiche">—</span></div>
     </div>
- 
-    <!-- Statut partenaire -->
+
     <div class="statut-partenaire" id="statut-partenaire"></div>
- 
-    <!-- Grille des jeux -->
+
     <div class="section-titre">🎮 Les jeux</div>
     <div class="jeux-grid">
- 
-      <a href="jeux/points.html" class="jeu-card points">
+
+      <a href="jeux/points.html" class="jeu-card points" id="card-points">
+        <span class="notif-bulle" id="notif-points"></span>
         <span class="emoji">🏆</span>
         <span class="nom">Défis & Points</span>
         <span class="desc">Missions à accomplir</span>
       </a>
- 
-      <a href="jeux/boite.html" class="jeu-card boite">
+
+      <a href="jeux/boite.html" class="jeu-card boite" id="card-boite">
+        <span class="notif-bulle" id="notif-boite"></span>
         <span class="emoji">🔒</span>
         <span class="nom">Boîte Secrète</span>
         <span class="desc">Photo ou message caché</span>
       </a>
- 
-      <a href="jeux/pictionary.html" class="jeu-card pictionary">
+
+      <a href="jeux/pictionary.html" class="jeu-card pictionary" id="card-pictionary">
+        <span class="notif-bulle" id="notif-pictionary"></span>
         <span class="emoji">🎨</span>
         <span class="nom">Pictionary</span>
         <span class="desc">Dessine un souvenir</span>
       </a>
- 
-      <a href="jeux/questions.html" class="jeu-card questions">
+
+      <a href="jeux/questions.html" class="jeu-card questions" id="card-questions">
+        <span class="notif-bulle" id="notif-questions"></span>
         <span class="emoji">💬</span>
         <span class="nom">Questions Vie</span>
         <span class="desc">Réponses croisées</span>
       </a>
- 
+
+      <a href="jeux/calendrier.html" class="jeu-card calendrier" id="card-calendrier">
+        <span class="notif-bulle" id="notif-calendrier"></span>
+        <span class="emoji">📅</span>
+        <span class="nom">Notre Calendrier</span>
+        <span class="desc">Appels & rendez-vous</span>
+      </a>
+
+      <a href="jeux/bereal.html" class="jeu-card bereal" id="card-bereal">
+        <span class="notif-bulle" id="notif-bereal"></span>
+        <span class="emoji">📸</span>
+        <span class="nom">Notre Moment</span>
+        <span class="desc">Photo surprise à deux</span>
+      </a>
+
+      <a href="jeux/concours.html" class="jeu-card concours" id="card-concours">
+        <span class="notif-bulle" id="notif-concours"></span>
+        <span class="emoji">🏅</span>
+        <span class="nom">Concours Photo</span>
+        <span class="desc">Le meilleur cliché gagne</span>
+      </a>
+
       <a href="jeux/escape.html" class="jeu-card escape bientot">
         <span class="emoji">🗝️</span>
         <span class="nom">Escape Game</span>
         <span class="bientot-badge">Bientôt</span>
       </a>
- 
+
     </div>
- 
-    <!-- Bouton quitter -->
+
     <hr class="sep">
     <button class="btn btn-gris" onclick="deconnecterSession()">🚪 Quitter le salon</button>
- 
-  </div><!-- /contenu -->
- 
-</div><!-- /container -->
- 
+
+  </div>
+</div>
+
 <script type="module">
   import { getSession, ecouterSalon, deconnecter, connecterFirebase } from "./auth.js";
- 
+  import { ecouterJeu } from "./db.js";
+
   const session = getSession();
- 
-  // Si pas de session, retour à l'accueil
-  if (!session.code) {
-    window.location.href = "index.html";
-  }
- 
+  if (!session.code) { window.location.href = "index.html"; }
+
   await connecterFirebase();
- 
-  // Écouter le salon en temps réel
+
+  // ===== SALON =====
   const stop = ecouterSalon(session.code, (data) => {
     document.getElementById("chargement").style.display = "none";
     document.getElementById("contenu").style.display    = "block";
- 
-    // Noms des joueurs
     document.getElementById("nom-a").textContent = data.joueurA?.prenom ?? "Joueur A";
     document.getElementById("nom-b").textContent = data.joueurB?.prenom ?? "En attente…";
     document.getElementById("code-affiche").textContent = session.code;
- 
-    // Statut partenaire
     const statutEl = document.getElementById("statut-partenaire");
     if (!data.joueurB) {
-      statutEl.innerHTML = `<span class="attente">⏳ En attente que l'autre joueur rejoigne…</span><br>
-        Code à partager : <strong>${session.code}</strong>`;
+      statutEl.innerHTML = `<span class="attente">⏳ En attente que l'autre joueur rejoigne…</span><br>Code : <strong>${session.code}</strong>`;
     } else {
-      const partenairePrenom = session.role === "joueurA"
-        ? data.joueurB.prenom
-        : data.joueurA.prenom;
+      const partenairePrenom = session.role === "joueurA" ? data.joueurB.prenom : data.joueurA.prenom;
       statutEl.innerHTML = `<span class="online">✓</span> ${partenairePrenom} est dans le salon`;
     }
   });
- 
-  // Déconnexion
+
+  // ===== NOTIFICATIONS =====
+  function afficherBulle(id, nb) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = nb > 9 ? "9+" : String(nb);
+    el.style.display = nb > 0 ? "flex" : "none";
+  }
+
+  function getVus(jeu) {
+    try { return new Set(JSON.parse(localStorage.getItem(`ktj_vu_${jeu}`) || "[]")); }
+    catch { return new Set(); }
+  }
+
+  const role = session.role;
+
+  // Défis & Points : missions de l'autre non validées
+  ecouterJeu(session.code, "jeu_points", (items) => {
+    const vus = getVus("points");
+    const n = items.filter(m => m.auteur !== role && !m.validee && !vus.has(m.id)).length;
+    afficherBulle("notif-points", n);
+  });
+
+  // Boîte Secrète : boîtes reçues non ouvertes
+  ecouterJeu(session.code, "jeu_boite", (items) => {
+    const vus = getVus("boite");
+    const n = items.filter(b => b.auteur !== role && !b.ouverte && !vus.has(b.id)).length;
+    afficherBulle("notif-boite", n);
+  });
+
+  // Pictionary : dessins reçus sans réponse
+  ecouterJeu(session.code, "jeu_pictionary", (items) => {
+    const vus = getVus("pictionary");
+    const n = items.filter(d => d.auteur !== role && d.valide === null && !d.reponse && !vus.has(d.id)).length;
+    afficherBulle("notif-pictionary", n);
+  });
+
+  // Questions : sans ma réponse OU réponse de l'autre disponible
+  ecouterJeu(session.code, "jeu_questions", (items) => {
+    const vus = getVus("questions");
+    const cleMoi   = role === "joueurA" ? "reponseA" : "reponseB";
+    const cleAutre = role === "joueurA" ? "reponseB" : "reponseA";
+    const n = items.filter(q => {
+      if (vus.has(q.id)) return false;
+      if (!q[cleMoi]) return true;
+      if (q[cleAutre]) return true;
+      return false;
+    }).length;
+    afficherBulle("notif-questions", n);
+  });
+
+  // Calendrier : nouvelles dates de l'autre
+  ecouterJeu(session.code, "jeu_calendrier", (items) => {
+    const vus = getVus("calendrier");
+    const n = items.filter(e => e.auteur !== role && !vus.has(e.id)).length;
+    afficherBulle("notif-calendrier", n);
+  });
+
+  // Notre Moment : moment actif où je n'ai pas posté
+  ecouterJeu(session.code, "jeu_bereal", (items) => {
+    const DUREE_MS = 2 * 60 * 60 * 1000;
+    const actif = items.find(m => !m.expire && (Date.now() - m.lanceAt) < DUREE_MS);
+    if (!actif) { afficherBulle("notif-bereal", 0); return; }
+    const maPhoto = role === "joueurA" ? actif.photoA : actif.photoB;
+    afficherBulle("notif-bereal", maPhoto ? 0 : 1);
+  });
+
+  // Concours Photo : nouveaux concours ou photos à voter
+  ecouterJeu(session.code, "jeu_concours", (items) => {
+    const vus = getVus("concours");
+    const monVoteCle = role === "joueurA" ? "voteA" : "voteB";
+    const maPhotoCle = role === "joueurA" ? "photoA" : "photoB";
+    const n = items.filter(c => {
+      if (vus.has(c.id)) return false;
+      if (c.termine) return false;
+      // Pas encore posté ma photo
+      if (!c[maPhotoCle]) return true;
+      // Les deux ont posté mais je n'ai pas voté
+      if (c.photoA && c.photoB && !c[monVoteCle]) return true;
+      return false;
+    }).length;
+    afficherBulle("notif-concours", n);
+  });
+
+  // Effacer les notifs quand on clique sur un jeu
+  document.querySelectorAll(".jeu-card[id]").forEach(card => {
+    card.addEventListener("click", () => {
+      const jeu = card.id.replace("card-", "");
+      localStorage.removeItem(`ktj_vu_${jeu}`);
+    });
+  });
+
   window.deconnecterSession = () => {
     if (confirm("Quitter le salon ? Tu pourras le rejoindre à nouveau avec le code.")) {
       stop();
