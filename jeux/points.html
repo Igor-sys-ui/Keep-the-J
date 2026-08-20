@@ -3,111 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Défis & Points — Keep The J</title>
+  <title>Défis — Keep The J</title>
   <link rel="stylesheet" href="../style.css">
   <style>
     .scores { gap: 24px; }
     .score-joueur .pts { color: var(--rose-fonce); }
-
-    /* Formulaire ajout mission */
-    .form-mission {
-      background: var(--blanc);
-      border-radius: var(--rayon);
-      padding: 20px;
-      box-shadow: var(--ombre);
-      margin-bottom: 20px;
-    }
+    .form-mission { background: var(--blanc); border-radius: var(--rayon); padding: 20px; box-shadow: var(--ombre); margin-bottom: 20px; }
     .form-mission h2 { margin-bottom: 16px; }
-
-    /* Liste des missions */
-    .mission-card {
-      background: var(--blanc);
-      border-radius: var(--rayon);
-      padding: 16px;
-      box-shadow: var(--ombre);
-      margin-bottom: 12px;
-      border-left: 4px solid #eee;
-    }
-    .mission-card.mienne   { border-left-color: var(--rose-fonce); }
-    .mission-card.partenaire { border-left-color: #2a6fc4; }
-    .mission-card.validee  { opacity: 0.55; }
-
-    .mission-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 8px;
-    }
+    .mission-card { background: var(--blanc); border-radius: var(--rayon); padding: 16px; box-shadow: var(--ombre); margin-bottom: 12px; border-left: 4px solid #eee; }
+    .mission-card.mienne    { border-left-color: var(--rose-fonce); }
+    .mission-card.partenaire{ border-left-color: #2a6fc4; }
+    .mission-card.validee   { opacity: 0.55; }
+    .mission-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
     .mission-texte { font-weight: 600; flex: 1; margin-right: 8px; }
-    .mission-pts {
-      background: #f9c74f;
-      color: #7a5c00;
-      font-weight: 700;
-      font-size: 0.85rem;
-      padding: 3px 10px;
-      border-radius: 20px;
-      white-space: nowrap;
-    }
-    .mission-meta {
-      font-size: 0.8rem;
-      color: var(--gris);
-      margin-bottom: 10px;
-    }
-    .mission-actions { display: flex; gap: 8px; }
-    .mission-actions .btn {
-      width: auto;
-      padding: 8px 14px;
-      font-size: 0.85rem;
-    }
-
-    /* Filtre */
-    .filtres {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-    .filtre-btn {
-      padding: 6px 14px;
-      border-radius: 20px;
-      border: 1.5px solid #ddd;
-      background: var(--blanc);
-      font-size: 0.82rem;
-      font-weight: 600;
-      cursor: pointer;
-      color: var(--gris);
-    }
-    .filtre-btn.actif {
-      border-color: var(--rose-fonce);
-      color: var(--rose-fonce);
-      background: var(--rose-clair);
-    }
-
-    .vide {
-      text-align: center;
-      padding: 32px 0;
-      color: #bbb;
-      font-size: 0.9rem;
-    }
+    .mission-pts { background: #f9c74f; color: #7a5c00; font-weight: 700; font-size: 0.85rem; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+    .mission-meta { font-size: 0.8rem; color: var(--gris); margin-bottom: 10px; }
+    .mission-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mission-actions .btn { width: auto; padding: 8px 14px; font-size: 0.85rem; }
+    .filtres { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filtre-btn { padding: 6px 14px; border-radius: 20px; border: 1.5px solid #ddd; background: var(--blanc); font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--gris); }
+    .filtre-btn.actif { border-color: var(--rose-fonce); color: var(--rose-fonce); background: var(--rose-clair); }
+    .vide { text-align: center; padding: 32px 0; color: #bbb; font-size: 0.9rem; }
+    .chrono-toggle { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+    .chrono-toggle input[type=checkbox] { width:18px; height:18px; accent-color:var(--rose-fonce); cursor:pointer; }
+    .chrono-toggle label { font-size:0.9rem; font-weight:600; color:var(--gris); cursor:pointer; }
+    .chrono-fields { display:none; background:var(--gris-clair); border-radius:10px; padding:12px; margin-bottom:12px; }
+    .chrono-fields.visible { display:block; }
+    .chrono-row { display:flex; gap:8px; align-items:center; }
+    .chrono-row input { margin-bottom:0; flex:1; }
+    .chrono-row select { flex:1; padding:12px; border:1.5px solid #ddd; border-radius:var(--rayon); font-size:1rem; background:white; }
+    .chrono-badge  { background:#fff8e1; color:#7a6000; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:20px; display:inline-block; margin-bottom:6px; }
+    .chrono-expire { background:#fde8e8; color:#a32020; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:20px; display:inline-block; margin-bottom:6px; }
   </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- En-tête -->
   <div class="header">
     <a href="../app.html" class="back">←</a>
-    <h1>🏆 Défis & Points</h1>
+    <h1>🏆 Défis</h1>
   </div>
 
-  <!-- Scores -->
   <div class="card">
     <div class="scores" id="scores-zone">
       <div class="score-joueur">
         <div class="pts" id="score-a">0</div>
         <div class="nom" id="nom-score-a">Joueur A</div>
       </div>
-      <div style="font-size:1.5rem; color:#ddd; align-self:center;">VS</div>
+      <div style="font-size:1.5rem;color:#ddd;align-self:center;">VS</div>
       <div class="score-joueur">
         <div class="pts" id="score-b">0</div>
         <div class="nom" id="nom-score-b">Joueur B</div>
@@ -115,48 +58,52 @@
     </div>
   </div>
 
-  <!-- Formulaire nouvelle mission -->
   <div class="form-mission">
     <h2>➕ Proposer une mission</h2>
     <label for="texte-mission">La mission</label>
     <textarea id="texte-mission" placeholder="Ex : Envoie-moi une photo de ton sourire avant ce soir…"></textarea>
-
     <label for="pts-mission">Points si réussie</label>
-    <input type="number" id="pts-mission" placeholder="Ex : 10" min="1" max="999" value="10">
-
+    <input type="number" id="pts-mission" min="1" max="999" value="10">
+    <div class="chrono-toggle">
+      <input type="checkbox" id="activer-chrono" onchange="toggleChrono()">
+      <label for="activer-chrono">⏱ Ajouter une limite de temps</label>
+    </div>
+    <div class="chrono-fields" id="chrono-fields">
+      <label>Durée pour accomplir la mission</label>
+      <div class="chrono-row">
+        <input type="number" id="chrono-valeur" min="1" max="999" value="24">
+        <select id="chrono-unite">
+          <option value="heures">Heures</option>
+          <option value="jours" selected>Jours</option>
+        </select>
+      </div>
+    </div>
     <div id="msg-form"></div>
     <button class="btn btn-rose" onclick="ajouterMission()">Envoyer la mission 🚀</button>
   </div>
 
-  <!-- Filtres -->
   <div class="filtres">
     <button class="filtre-btn actif" onclick="filtrer('toutes', this)">Toutes</button>
     <button class="filtre-btn"       onclick="filtrer('en-cours', this)">En cours</button>
     <button class="filtre-btn"       onclick="filtrer('validees', this)">Validées ✓</button>
+    <button class="filtre-btn"       onclick="filtrer('expirees', this)">Expirées ⏰</button>
   </div>
 
-  <!-- Liste des missions -->
-  <div id="liste-missions">
-    <div class="spinner">Chargement…</div>
-  </div>
+  <div id="liste-missions"><div class="spinner">Chargement…</div></div>
 
 </div>
-
 <script type="module">
   import { getSession, connecterFirebase, ecouterSalon } from "../auth.js";
-  import { ecouterJeu, ajouterItem, modifierItem, supprimerItem,
-           mettreAJourScore, lireSalon } from "../db.js";
+  import { ecouterJeu, ajouterItem, modifierItem, supprimerItem, mettreAJourScore, lireSalon } from "../db.js";
 
   const session = getSession();
   if (!session.code) { window.location.href = "../index.html"; }
-
   await connecterFirebase();
 
   let filtreCourant = "toutes";
   let toutesLesMissions = [];
   let prenoms = { A: "Joueur A", B: "Joueur B" };
 
-  // Récupérer les prénoms
   const salon = await lireSalon(session.code);
   if (salon) {
     prenoms.A = salon.joueurA?.prenom ?? "Joueur A";
@@ -168,66 +115,60 @@
     document.getElementById("score-b").textContent = sc.B;
   }
 
-  // Écouter les scores en temps réel
   ecouterSalon(session.code, (data) => {
     const sc = data.scores?.points ?? { A: 0, B: 0 };
     document.getElementById("score-a").textContent = sc.A;
     document.getElementById("score-b").textContent = sc.B;
   });
 
-  // Écouter les missions en temps réel
   ecouterJeu(session.code, "jeu_points", (missions) => {
     toutesLesMissions = missions;
     afficherMissions();
   });
 
-  // --- Ajouter une mission ---
+  window.toggleChrono = () => {
+    const actif = document.getElementById("activer-chrono").checked;
+    document.getElementById("chrono-fields").classList.toggle("visible", actif);
+  };
+
   window.ajouterMission = async () => {
     const texte = document.getElementById("texte-mission").value.trim();
     const pts   = parseInt(document.getElementById("pts-mission").value) || 10;
     const msgEl = document.getElementById("msg-form");
-
-    if (!texte) {
-      msgEl.innerHTML = `<div class="msg msg-err">Écris une mission d'abord.</div>`;
-      return;
+    if (!texte) { msgEl.innerHTML = `<div class="msg msg-err">Écris une mission d'abord.</div>`; return; }
+    const avecChrono = document.getElementById("activer-chrono").checked;
+    let deadlineMs = null;
+    if (avecChrono) {
+      const val   = parseInt(document.getElementById("chrono-valeur").value) || 24;
+      const unite = document.getElementById("chrono-unite").value;
+      deadlineMs  = Date.now() + (unite === "heures" ? val * 3600000 : val * 86400000);
     }
-
     try {
       await ajouterItem(session.code, "jeu_points", {
-        texte,
-        points:  pts,
-        auteur:  session.role,          // "joueurA" ou "joueurB"
-        validee: false,
-        valideeAt: null
+        texte, points: pts, auteur: session.role,
+        validee: false, valideeAt: null, deadline: deadlineMs
       });
       document.getElementById("texte-mission").value = "";
       document.getElementById("pts-mission").value   = "10";
+      document.getElementById("activer-chrono").checked = false;
+      toggleChrono();
       msgEl.innerHTML = `<div class="msg msg-ok">Mission envoyée ! ✓</div>`;
       setTimeout(() => msgEl.innerHTML = "", 2500);
-    } catch (e) {
-      msgEl.innerHTML = `<div class="msg msg-err">${e.message}</div>`;
-    }
+    } catch(e) { msgEl.innerHTML = `<div class="msg msg-err">${e.message}</div>`; }
   };
 
-  // --- Valider une mission (l'auteur valide que l'autre a accompli) ---
   window.validerMission = async (id, points, auteur) => {
     if (!confirm(`Confirmes-tu que la mission a été accomplie ? (+${points} pts)`)) return;
-    await modifierItem(session.code, "jeu_points", id, {
-      validee: true,
-      valideeAt: new Date().toISOString()
-    });
-    // Les points vont à l'autre joueur (celui qui a accompli la mission)
+    await modifierItem(session.code, "jeu_points", id, { validee: true, valideeAt: new Date().toISOString() });
     const beneficiaire = auteur === "joueurA" ? "joueurB" : "joueurA";
     await mettreAJourScore(session.code, "points", beneficiaire, points);
   };
 
-  // --- Supprimer une mission (seulement l'auteur, si pas validée) ---
   window.supprimerMission = async (id) => {
     if (!confirm("Supprimer cette mission ?")) return;
     await supprimerItem(session.code, "jeu_points", id);
   };
 
-  // --- Filtre ---
   window.filtrer = (type, btn) => {
     filtreCourant = type;
     document.querySelectorAll(".filtre-btn").forEach(b => b.classList.remove("actif"));
@@ -235,55 +176,56 @@
     afficherMissions();
   };
 
-  // --- Afficher les missions selon le filtre ---
   function afficherMissions() {
     const liste = document.getElementById("liste-missions");
-
-    let missions = toutesLesMissions;
-    if (filtreCourant === "en-cours")  missions = missions.filter(m => !m.validee);
+    let missions = [...toutesLesMissions];
+    if (filtreCourant === "en-cours")  missions = missions.filter(m => !m.validee && (!m.deadline || m.deadline > Date.now()));
     if (filtreCourant === "validees")  missions = missions.filter(m =>  m.validee);
-
+    if (filtreCourant === "expirees")  missions = missions.filter(m => !m.validee && m.deadline && m.deadline <= Date.now());
     if (missions.length === 0) {
       liste.innerHTML = `<div class="vide">Aucune mission ici.<br>Sois le premier à en proposer une ! 🎯</div>`;
       return;
     }
-
     liste.innerHTML = missions.map(m => {
       const estMienne    = m.auteur === session.role;
       const classeCard   = estMienne ? "mienne" : "partenaire";
       const classeValide = m.validee ? "validee" : "";
       const prenomAuteur = m.auteur === "joueurA" ? prenoms.A : prenoms.B;
-
-      // Actions disponibles
       let actions = "";
       if (!m.validee && estMienne) {
-        // L'auteur peut valider (l'autre a accompli) ou supprimer
         actions = `
-          <button class="btn btn-vert"   onclick="validerMission('${m.id}', ${m.points}, '${m.auteur}')">✓ Valider</button>
-          <button class="btn btn-danger" onclick="supprimerMission('${m.id}')">🗑</button>
-        `;
+          <button class="btn btn-vert"   onclick="validerMission('${m.id}',${m.points},'${m.auteur}')">✓ Valider</button>
+          <button class="btn btn-danger" onclick="supprimerMission('${m.id}')">🗑</button>`;
       } else if (m.validee) {
-        actions = `
-          <span style="color:var(--vert); font-size:0.85rem; font-weight:600;">✓ Accomplie</span>
-          <button class="btn btn-danger" onclick="supprimerMission('${m.id}')" style="width:auto;padding:6px 10px;font-size:0.78rem;margin-left:8px;">🗑</button>
-  `     ;
+        actions = `<span style="color:var(--vert);font-size:0.85rem;font-weight:600;">✓ Accomplie</span>
+          <button class="btn btn-danger" onclick="supprimerMission('${m.id}')" style="width:auto;padding:6px 10px;font-size:0.78rem;margin-left:8px;">🗑</button>`;
       } else {
-        actions = `
-          <span style="color:var(--gris); font-size:0.82rem;">En attente de validation</span>
-          <button class="btn btn-danger" onclick="supprimerMission('${m.id}')" style="width:auto;padding:6px 10px;font-size:0.78rem;margin-left:8px;">🗑</button>
-  `    ;
+        actions = `<span style="color:var(--gris);font-size:0.82rem;">En attente de validation</span>
+          <button class="btn btn-danger" onclick="supprimerMission('${m.id}')" style="width:auto;padding:6px 10px;font-size:0.78rem;margin-left:8px;">🗑</button>`;
       }
-
+      let chronoHtml = "";
+      if (m.deadline && !m.validee) {
+        const restant = m.deadline - Date.now();
+        if (restant <= 0) {
+          chronoHtml = `<div class="chrono-expire">⏰ Délai expiré</div>`;
+        } else {
+          const j  = Math.floor(restant / 86400000);
+          const h  = Math.floor((restant % 86400000) / 3600000);
+          const mn = Math.floor((restant % 3600000) / 60000);
+          const txt = j > 0 ? `${j}j ${h}h` : h > 0 ? `${h}h ${mn}min` : `${mn} min`;
+          chronoHtml = `<div class="chrono-badge">⏱ ${txt} restant</div>`;
+        }
+      }
       return `
         <div class="mission-card ${classeCard} ${classeValide}">
           <div class="mission-header">
             <span class="mission-texte">${m.texte}</span>
             <span class="mission-pts">+${m.points} pts</span>
           </div>
+          ${chronoHtml}
           <div class="mission-meta">Proposée par <strong>${prenomAuteur}</strong></div>
           <div class="mission-actions">${actions}</div>
-        </div>
-      `;
+        </div>`;
     }).join("");
   }
 </script>
