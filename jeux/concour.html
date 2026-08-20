@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concours Photo — Keep The J</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .scores { gap: 24px; margin-bottom: 4px; }
+    .score-joueur .pts { color: #b5a0e8; }
+ 
+    .form-concours { background: var(--blanc); border-radius: var(--rayon); padding: 20px; box-shadow: var(--ombre); margin-bottom: 20px; }
+    .form-concours h2 { margin-bottom: 14px; }
+ 
+    /* Upload */
+    .upload-zone { border: 2px dashed #ddd; border-radius: var(--rayon); padding: 20px; text-align: center; cursor: pointer; color: var(--gris); font-size: 0.9rem; margin: 10px 0; transition: all 0.2s; }
+    .upload-zone:hover { border-color: #b5a0e8; color: #6a4fc4; background: #f5f0ff; }
+    .upload-zone input[type="file"] { display: none; }
+    .apercu { width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; display: none; }
+    .apercu.visible { display: block; }
+ 
+    /* Carte concours */
+    .concours-card { background: var(--blanc); border-radius: var(--rayon); box-shadow: var(--ombre); margin-bottom: 24px; overflow: hidden; }
+    .concours-header { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; }
+    .concours-theme { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; }
+    .concours-meta { font-size: 0.78rem; color: var(--gris); }
+ 
+    .statut-pill { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 6px; }
+    .s-attente  { background: #fff8e1; color: #7a6000; }
+    .s-vote     { background: #d0eaff; color: #2a6fc4; }
+    .s-termine  { background: #d4f4e2; color: #1a6b3c; }
+ 
+    /* Deux photos */
+    .photos-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; }
+    .photo-bloc { position: relative; }
+    .photo-bloc img { width: 100%; height: 170px; object-fit: cover; border-radius: 8px; display: block; }
+    .photo-bloc .photo-nom { position: absolute; bottom: 6px; left: 6px; background: rgba(0,0,0,0.55); color: white; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+    .photo-bloc .photo-titre { position: absolute; top: 6px; left: 6px; right: 6px; background: rgba(0,0,0,0.6); color: white; font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; text-align: center; }
+    .photo-attente { width: 100%; height: 170px; background: var(--gris-clair); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: var(--gris); font-size: 0.82rem; padding: 10px; text-align: center; }
+    .photo-floue-wrap { position: relative; overflow: hidden; border-radius: 8px; }
+    .photo-floue { width: 100%; height: 170px; object-fit: cover; filter: blur(16px); transform: scale(1.05); display: block; }
+    .photo-floue-wrap .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; color: white; font-weight: 700; font-size: 0.8rem; text-align: center; text-shadow: 0 1px 4px rgba(0,0,0,0.6); padding: 10px; }
+ 
+    /* Titre du défi : la photo à reproduire */
+    .defi-photo-wrap { padding: 10px 16px; background: #f9f5ff; border-bottom: 1px solid #eee; }
+    .defi-photo-wrap img { width: 100%; max-height: 220px; object-fit: cover; border-radius: 10px; }
+    .defi-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #6a4fc4; margin-bottom: 6px; }
+ 
+    /* Vote */
+    .vote-zone { padding: 14px 16px; border-top: 1px solid #f0f0f0; }
+    .vote-zone h3 { margin-bottom: 10px; font-size: 0.9rem; }
+    .vote-btns { display: flex; gap: 8px; }
+    .vote-btn { flex: 1; padding: 10px; border: 2px solid #eee; border-radius: 10px; background: var(--blanc); cursor: pointer; font-size: 0.85rem; font-weight: 600; color: var(--gris); transition: all 0.2s; }
+    .vote-btn:hover { border-color: #b5a0e8; color: #6a4fc4; background: #f5f0ff; }
+ 
+    /* Résultat */
+    .resultat { padding: 14px 16px; border-top: 1px solid #f0f0f0; text-align: center; }
+    .vainqueur-txt { font-size: 1.3rem; font-weight: 700; color: #b5a0e8; margin-bottom: 4px; }
+    .votes-detail { font-size: 0.82rem; color: var(--gris); margin-top: 4px; }
+ 
+    .card-footer { padding: 10px 16px; border-top: 1px solid #f0f0f0; display: flex; gap: 8px; }
+    .card-footer .btn { width: auto; padding: 7px 12px; font-size: 0.8rem; }
+ 
+    .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; }
+    .vide { text-align: center; padding: 32px 0; color: #bbb; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+ 
+  <div class="header">
+    <a href="../app.html" class="back">←</a>
+    <h1>🏅 Concours Photo</h1>
+  </div>
+ 
+  <div class="card">
+    <div class="scores">
+      <div class="score-joueur">
+        <div class="pts" id="score-a">0</div>
+        <div class="nom" id="nom-score-a">Joueur A</div>
+      </div>
+      <div style="font-size:1.5rem;color:#ddd;align-self:center;">VS</div>
+      <div class="score-joueur">
+        <div class="pts" id="score-b">0</div>
+        <div class="nom" id="nom-score-b">Joueur B</div>
+      </div>
+    </div>
+  </div>
+ 
+  <div class="msg msg-info" style="margin-bottom:20px;">
+    Poste une photo avec un titre. L'autre doit prendre une photo similaire. Ensuite vous votez pour la meilleure ! 🏅
+  </div>
+ 
+  <!-- Formulaire -->
+  <div class="form-concours">
+    <h2>📷 Lancer un défi photo</h2>
+    <label for="titre-defi">Titre du défi</label>
+    <input type="text" id="titre-defi" placeholder="Ex : Un coucher de soleil, Mon petit-déjeuner…">
+ 
+    <label>Ta photo de référence</label>
+    <img id="apercu-new" class="apercu" alt="Aperçu">
+    <div class="upload-zone" onclick="document.getElementById('input-new').click()">
+      📷 Choisir ma photo
+      <input type="file" id="input-new" accept="image/*" onchange="chargerPhotoNew(event)">
+    </div>
+ 
+    <label for="pts-defi">Points pour le gagnant</label>
+    <input type="number" id="pts-defi" value="10" min="1" max="999">
+ 
+    <div id="msg-new"></div>
+    <button class="btn btn-rose" onclick="lancerDefi()" style="background:#b5a0e8;">Lancer le défi 🏅</button>
+  </div>
+ 
+  <div class="section-titre">🏆 Les défis en cours</div>
+  <div id="fil-concours"><div class="spinner">Chargement…</div></div>
+ 
+</div>
+<script type="module">
+  import { getSession, connecterFirebase, ecouterSalon } from "../auth.js";
+  import { ecouterJeu, ajouterItem, modifierItem, supprimerItem, lireSalon } from "../db.js";
+  import { db } from "../firebase-config.js";
+  import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+ 
+  const session = getSession();
+  if (!session.code) { window.location.href = "../index.html"; }
+  await connecterFirebase();
+ 
+  let prenoms = { A: "Joueur A", B: "Joueur B" };
+  let photoNewB64 = null;   // photo du lanceur
+  let photosReponse = {};   // { concoursId: base64 } pour les réponses en attente
+ 
+  const salon = await lireSalon(session.code);
+  if (salon) {
+    prenoms.A = salon.joueurA?.prenom ?? "Joueur A";
+    prenoms.B = salon.joueurB?.prenom ?? "Joueur B";
+    document.getElementById("nom-score-a").textContent = prenoms.A;
+    document.getElementById("nom-score-b").textContent = prenoms.B;
+  }
+ 
+  ecouterSalon(session.code, (data) => {
+    const sc = data.scores?.concours ?? { A: 0, B: 0 };
+    document.getElementById("score-a").textContent = sc.A;
+    document.getElementById("score-b").textContent = sc.B;
+  });
+ 
+  // =====================
+  // COMPRESSION PHOTO
+  // =====================
+  function compresser(fichier, callback) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 800;
+        const ratio = Math.min(1, MAX / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width  = img.width  * ratio;
+        canvas.height = img.height * ratio;
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        callback(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(fichier);
+  }
+ 
+  // =====================
+  // PHOTO DU LANCEUR
+  // =====================
+  window.chargerPhotoNew = (event) => {
+    const f = event.target.files[0];
+    if (!f) return;
+    compresser(f, (b64) => {
+      photoNewB64 = b64;
+      const ap = document.getElementById("apercu-new");
+      ap.src = b64; ap.classList.add("visible");
+    });
+  };
+ 
+  // =====================
+  // LANCER UN DÉFI
+  // =====================
+  window.lancerDefi = async () => {
+    const titre = document.getElementById("titre-defi").value.trim();
+    const pts   = parseInt(document.getElementById("pts-defi").value) || 10;
+    const msgEl = document.getElementById("msg-new");
+    if (!titre)      { msgEl.innerHTML = `<div class="msg msg-err">Donne un titre au défi.</div>`; return; }
+    if (!photoNewB64) { msgEl.innerHTML = `<div class="msg msg-err">Ajoute ta photo de référence.</div>`; return; }
+    const tailleKo = Math.round(photoNewB64.length * 0.75 / 1024);
+    if (tailleKo > 900) { msgEl.innerHTML = `<div class="msg msg-err">Photo trop lourde, essaie-en une autre.</div>`; return; }
+    try {
+      msgEl.innerHTML = `<div class="msg msg-info">Envoi…</div>`;
+      // La photo du lanceur est stockée dans photoA ou photoB selon son rôle
+      const clePhoto = session.role === "joueurA" ? "photoA" : "photoB";
+      await ajouterItem(session.code, "jeu_concours", {
+        titre, pts,
+        lancePar: session.role,
+        photoA: session.role === "joueurA" ? photoNewB64 : null,
+        photoB: session.role === "joueurB" ? photoNewB64 : null,
+        voteA: null, voteB: null,
+        vainqueur: null,
+        termine: false
+      });
+      document.getElementById("titre-defi").value = "";
+      document.getElementById("apercu-new").classList.remove("visible");
+      document.getElementById("input-new").value = "";
+      photoNewB64 = null;
+      msgEl.innerHTML = `<div class="msg msg-ok">Défi lancé ! ✓</div>`;
+      setTimeout(() => msgEl.innerHTML = "", 2500);
+    } catch(e) {
+      msgEl.innerHTML = `<div class="msg msg-err">Erreur : ${e.message}</div>`;
+    }
+  };
+ 
+  // =====================
+  // RÉPONDRE AU DÉFI
+  // =====================
+  window.ouvrirUploadReponse = (id) => {
+    document.getElementById(`input-rep-${id}`).click();
+  };
+ 
+  window.chargerPhotoReponse = (event, id) => {
+    const f = event.target.files[0];
+    if (!f) return;
+    compresser(f, (b64) => {
+      photosReponse[id] = b64;
+      const ap = document.getElementById(`apercu-rep-${id}`);
+      if (ap) { ap.src = b64; ap.classList.add("visible"); }
+      const btn = document.getElementById(`btn-poster-rep-${id}`);
+      if (btn) btn.style.display = "block";
+    });
+  };
+ 
+  window.posterReponse = async (id) => {
+    const b64 = photosReponse[id];
+    if (!b64) return;
+    const tailleKo = Math.round(b64.length * 0.75 / 1024);
+    if (tailleKo > 900) { alert("Photo trop lourde, essaie-en une autre."); return; }
+    const clePhoto = session.role === "joueurA" ? "photoA" : "photoB";
+    await modifierItem(session.code, "jeu_concours", id, { [clePhoto]: b64 });
+    delete photosReponse[id];
+  };
+ 
+  // =====================
+  // VOTER
+  // =====================
+  window.voter = async (id, pourQui) => {
+    const nomVote = prenoms[pourQui];
+    if (!confirm(`Voter pour ${nomVote} ? (Non modifiable)`)) return;
+    const cleVote = session.role === "joueurA" ? "voteA" : "voteB";
+    await modifierItem(session.code, "jeu_concours", id, { [cleVote]: pourQui });
+  };
+ 
+  // =====================
+  // CALCULER RÉSULTAT (déclenché automatiquement)
+  // =====================
+  async function calculerSiTermine(c) {
+    if (!c.voteA || !c.voteB || c.termine) return;
+    const votesA = [c.voteA, c.voteB].filter(v => v === "A").length;
+    const votesB = [c.voteA, c.voteB].filter(v => v === "B").length;
+    const vainqueur = votesA > votesB ? "A" : votesB > votesA ? "B" : "egalite";
+    await modifierItem(session.code, "jeu_concours", c.id, { vainqueur, termine: true });
+    if (vainqueur !== "egalite") {
+      const salonData = await lireSalon(session.code);
+      const scActuel = salonData?.scores?.concours ?? { A: 0, B: 0 };
+      const nouveauScore = (scActuel[vainqueur] || 0) + c.pts;
+      await updateDoc(doc(db, "salons", session.code), {
+        [`scores.concours.${vainqueur}`]: nouveauScore
+      });
+    }
+  }
+ 
+  // =====================
+  // SUPPRIMER
+  // =====================
+  window.supprimerDefi = async (id) => {
+    if (!confirm("Supprimer ce défi ?")) return;
+    await supprimerItem(session.code, "jeu_concours", id);
+  };
+ 
+  // =====================
+  // AFFICHAGE
+  // =====================
+  ecouterJeu(session.code, "jeu_concours", (concours) => {
+    const fil = document.getElementById("fil-concours");
+ 
+    if (concours.length === 0) {
+      fil.innerHTML = `<div class="vide">Aucun défi pour l'instant.<br>Lance le premier ! 📷</div>`;
+      return;
+    }
+ 
+    // Déclencher calcul si besoin
+    concours.forEach(c => { if (c.voteA && c.voteB && !c.termine) calculerSiTermine(c); });
+ 
+    fil.innerHTML = [...concours].reverse().map(c => {
+      const monRole      = session.role;
+      const maPhoto      = monRole === "joueurA" ? c.photoA : c.photoB;
+      const autrePhoto   = monRole === "joueurA" ? c.photoB : c.photoA;
+      const monPrenom    = monRole === "joueurA" ? prenoms.A : prenoms.B;
+      const autrePrenom  = monRole === "joueurA" ? prenoms.B : prenoms.A;
+      const autreRoleKey = monRole === "joueurA" ? "B" : "A";
+      const monVote      = monRole === "joueurA" ? c.voteA : c.voteB;
+      const lancePar     = c.lancePar === "joueurA" ? prenoms.A : prenoms.B;
+      const estLanceur   = c.lancePar === monRole;
+ 
+      // Statut
+      let statutTxt = "", statutCls = "";
+      if (c.termine)               { statutTxt = "✓ Terminé";              statutCls = "s-termine"; }
+      else if (c.photoA && c.photoB){ statutTxt = "🗳️ Vote en cours";       statutCls = "s-vote"; }
+      else                          { statutTxt = "⏳ En attente de la réponse"; statutCls = "s-attente"; }
+ 
+      // Photo de référence (celle du lanceur — toujours visible)
+      const photoRef  = c.lancePar === "joueurA" ? c.photoA : c.photoB;
+      const photoRep  = c.lancePar === "joueurA" ? c.photoB : c.photoA;
+      const prenomRef = c.lancePar === "joueurA" ? prenoms.A : prenoms.B;
+      const prenomRep = c.lancePar === "joueurA" ? prenoms.B : prenoms.A;
+ 
+      // Photo référence : toujours visible
+      const photoRefHtml = photoRef
+        ? `<div class="photo-bloc">
+             <img src="${photoRef}">
+             <span class="photo-titre">${c.titre}</span>
+             <span class="photo-nom">${prenomRef} (référence)</span>
+           </div>`
+        : `<div class="photo-bloc"><div class="photo-attente">📷 ${prenomRef} n'a pas encore posté</div></div>`;
+ 
+      // Photo réponse
+      let photoRepHtml = "";
+      if (photoRep) {
+        // Visible seulement si la photo de l'autre répondeur est disponible
+        // ou si le concours est terminé
+        const peutVoir = (estLanceur) || c.termine || maPhoto;
+        if (peutVoir) {
+          photoRepHtml = `<div class="photo-bloc">
+            <img src="${photoRep}">
+            <span class="photo-nom">${prenomRep} (réponse)</span>
+          </div>`;
+        } else {
+          photoRepHtml = `<div class="photo-bloc">
+            <div class="photo-floue-wrap">
+              <img src="${photoRep}" class="photo-floue">
+              <div class="overlay">🔒 Poste ta réponse pour voir celle de ${prenomRep}</div>
+            </div>
+          </div>`;
+        }
+      } else if (!estLanceur && !maPhoto && !c.termine) {
+        // Je suis le répondeur et je n'ai pas encore posté
+        photoRepHtml = `<div class="photo-bloc">
+          <div class="photo-attente">
+            <span>📷 Ta réponse photo</span>
+            <img id="apercu-rep-${c.id}" class="apercu" alt="">
+            <input type="file" id="input-rep-${c.id}" accept="image/*"
+              onchange="chargerPhotoReponse(event,'${c.id}')" style="display:none;">
+            <button class="btn btn-rose" onclick="ouvrirUploadReponse('${c.id}')"
+              style="width:auto;padding:8px 14px;font-size:0.82rem;background:#b5a0e8;">
+              Choisir 📷
+            </button>
+            <button class="btn btn-vert" id="btn-poster-rep-${c.id}"
+              onclick="posterReponse('${c.id}')"
+              style="width:auto;padding:8px 14px;font-size:0.82rem;display:none;">
+              Poster ✓
+            </button>
+          </div>
+        </div>`;
+      } else {
+        photoRepHtml = `<div class="photo-bloc"><div class="photo-attente">⏳ ${prenomRep} n'a pas encore répondu</div></div>`;
+      }
+ 
+      // Zone de vote
+      let voteHtml = "";
+      if (c.photoA && c.photoB && !c.termine) {
+        if (!monVote) {
+          voteHtml = `
+            <div class="vote-zone">
+              <h3>🗳️ Quelle est la meilleure photo ?</h3>
+              <div class="vote-btns">
+                <button class="vote-btn" onclick="voter('${c.id}','${c.lancePar === 'joueurA' ? 'A' : 'B'}')">
+                  📷 ${prenomRef}
+                </button>
+                <button class="vote-btn" onclick="voter('${c.id}','${c.lancePar === 'joueurA' ? 'B' : 'A'}')">
+                  📷 ${prenomRep}
+                </button>
+              </div>
+            </div>`;
+        } else {
+          voteHtml = `<div class="vote-zone" style="font-size:0.85rem;color:var(--gris);">
+            ✓ Tu as voté · En attente du vote de ${autrePrenom}…
+          </div>`;
+        }
+      }
+ 
+      // Résultat
+      let resultatHtml = "";
+      if (c.termine && c.vainqueur) {
+        if (c.vainqueur === "egalite") {
+          resultatHtml = `<div class="resultat"><div class="vainqueur-txt">🤝 Égalité !</div></div>`;
+        } else {
+          const nomV  = prenoms[c.vainqueur];
+          const estMoi = (c.vainqueur === "A" && monRole === "joueurA") ||
+                         (c.vainqueur === "B" && monRole === "joueurB");
+          resultatHtml = `
+            <div class="resultat">
+              <div class="vainqueur-txt">${estMoi ? "🏆 Tu as gagné !" : `🏆 ${nomV} a gagné !`}</div>
+              <div class="votes-detail">+${c.pts} pts</div>
+            </div>`;
+        }
+      }
+ 
+      return `
+        <div class="concours-card">
+          <div class="concours-header">
+            <div class="concours-theme">📷 ${c.titre}</div>
+            <div class="concours-meta">Lancé par <strong>${lancePar}</strong> · ${c.pts} pts</div>
+            <span class="statut-pill ${statutCls}">${statutTxt}</span>
+          </div>
+          <div class="photos-duo">${photoRefHtml}${photoRepHtml}</div>
+          ${voteHtml}
+          ${resultatHtml}
+          <div class="card-footer">
+            <button class="btn btn-danger" onclick="supprimerDefi('${c.id}')">🗑 Supprimer</button>
+          </div>
+        </div>`;
+    }).join("");
+  });
+</script>
+</body>
+</html>
