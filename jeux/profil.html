@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profils — Keep The J</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    /* Cartes profil côte à côte */
+    .profils-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .profil-card { background: var(--blanc); border-radius: var(--rayon); padding: 16px; box-shadow: var(--ombre); text-align: center; }
+    .profil-card.moi   { border-top: 4px solid var(--rose-fonce); }
+    .profil-card.autre { border-top: 4px solid #2a6fc4; }
+    .profil-avatar { font-size: 2.8rem; margin-bottom: 6px; }
+    .profil-nom { font-weight: 700; font-size: 1rem; margin-bottom: 2px; }
+    .profil-role { font-size: 0.72rem; color: var(--gris); margin-bottom: 10px; }
+    .score-total { font-size: 2rem; font-weight: 700; color: var(--rose-fonce); }
+    .score-label { font-size: 0.72rem; color: var(--gris); }
+
+    /* Tableau comparatif */
+    .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; margin-top: 4px; }
+
+    .compare-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    .compare-table th { font-size: 0.78rem; color: var(--gris); font-weight: 600; padding: 8px 6px; text-align: center; border-bottom: 2px solid #eee; }
+    .compare-table th.jeu-col { text-align: left; }
+    .compare-table td { padding: 10px 6px; text-align: center; border-bottom: 1px solid #f5f5f5; font-size: 0.9rem; }
+    .compare-table td.jeu-nom { text-align: left; font-weight: 600; font-size: 0.85rem; color: var(--noir); }
+    .compare-table td.jeu-emoji { font-size: 1.1rem; }
+    .score-cell { font-weight: 700; font-size: 1rem; }
+    .score-cell.gagne { color: var(--vert); }
+    .score-cell.perd  { color: var(--rouge); }
+    .score-cell.egal  { color: var(--gris); }
+
+    /* Stats générales */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+    .stat-card { background: var(--blanc); border-radius: var(--rayon); padding: 14px; box-shadow: var(--ombre); text-align: center; }
+    .stat-val  { font-size: 1.8rem; font-weight: 700; color: var(--rose-fonce); line-height: 1; }
+    .stat-lbl  { font-size: 0.72rem; color: var(--gris); margin-top: 4px; }
+
+    /* Barre de progression */
+    .progress-wrap { margin-bottom: 20px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--gris); margin-bottom: 6px; }
+    .progress-label .nom-a { color: var(--rose-fonce); font-weight: 700; }
+    .progress-label .nom-b { color: #2a6fc4; font-weight: 700; }
+    .progress-bar { height: 12px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--rose-fonce), var(--rose)); transition: width 0.6s ease; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <a href="../app.html" class="back">←</a>
+    <h1>👤 Profils</h1>
+  </div>
+
+  <div id="chargement" class="spinner">Chargement…</div>
+  <div id="contenu" style="display:none;">
+
+    <!-- Cartes profil -->
+    <div class="profils-duo">
+      <div class="profil-card moi">
+        <div class="profil-avatar" id="avatar-moi">🙂</div>
+        <div class="profil-nom"  id="nom-moi">—</div>
+        <div class="profil-role" id="role-moi">—</div>
+        <div class="score-total" id="score-total-moi">0</div>
+        <div class="score-label">pts total</div>
+      </div>
+      <div class="profil-card autre">
+        <div class="profil-avatar" id="avatar-autre">🙂</div>
+        <div class="profil-nom"  id="nom-autre">—</div>
+        <div class="profil-role" id="role-autre">—</div>
+        <div class="score-total" id="score-total-autre">0</div>
+        <div class="score-label">pts total</div>
+      </div>
+    </div>
+
+    <!-- Barre de progression globale -->
+    <div class="section-titre">⚖️ Score global</div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span class="nom-a" id="label-barre-a">Joueur A — 0 pts</span>
+        <span class="nom-b" id="label-barre-b">Joueur B — 0 pts</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:50%"></div>
+      </div>
+    </div>
+
+    <!-- Tableau par jeu -->
+    <div class="section-titre">🎮 Scores par jeu</div>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th class="jeu-col">Jeu</th>
+          <th id="th-moi">Moi</th>
+          <th id="th-autre">Autre</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-scores"></tbody>
+    </table>
+
+    <!-- Stats globales -->
+    <div class="section-titre">📊 Statistiques</div>
+    <div class="stats-grid" id="stats-grid">
+      <div class="spinner" style="grid-column:1/-1;">Chargement…</div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { getSession, connecterFirebase } from "../auth.js";
+  import { lireSalon, ecouterJeu } from "../db.js";
+
+  const session = getSession();
+  if (!session.code) { window.location.href = "../index.html"; }
+  await connecterFirebase();
+
+  const salon = await lireSalon(session.code);
+  if (!salon) { document.getElementById("chargement").textContent = "Salon introuvable."; return; }
+
+  document.getElementById("chargement").style.display = "none";
+  document.getElementById("contenu").style.display    = "block";
+
+  const estA  = session.role === "joueurA";
+  const prenomA = salon.joueurA?.prenom ?? "Joueur A";
+  const prenomB = salon.joueurB?.prenom ?? "Joueur B";
+  const prenomMoi   = estA ? prenomA : prenomB;
+  const prenomAutre = estA ? prenomB : prenomA;
+
+  // Avatars selon l'ordre
+  const AVATARS = ["🙂","😊","🥰","😎","🤩","🦊","🐼","🌸","⭐","🦋"];
+  document.getElementById("avatar-moi").textContent   = AVATARS[prenomMoi.length   % AVATARS.length];
+  document.getElementById("avatar-autre").textContent = AVATARS[prenomAutre.length % AVATARS.length];
+  document.getElementById("nom-moi").textContent    = prenomMoi;
+  document.getElementById("nom-autre").textContent  = prenomAutre;
+  document.getElementById("role-moi").textContent   = estA ? "Joueur A" : "Joueur B";
+  document.getElementById("role-autre").textContent = estA ? "Joueur B" : "Joueur A";
+  document.getElementById("th-moi").textContent   = prenomMoi;
+  document.getElementById("th-autre").textContent = prenomAutre;
+
+  // =====================
+  // SCORES PAR JEU
+  // =====================
+  const JEUX = [
+    { key: "points",    emoji: "🏆", nom: "Défis" },
+    { key: "pictionary",emoji: "🎨", nom: "L'Artiste" },
+    { key: "concours",  emoji: "🏅", nom: "Concours Photo" },
+  ];
+
+  const sc = salon.scores ?? {};
+  let totalMoi = 0, totalAutre = 0;
+  const tbody = document.getElementById("tbody-scores");
+
+  JEUX.forEach(j => {
+    const scores = sc[j.key] ?? { A: 0, B: 0 };
+    const scoreMoi   = estA ? (scores.A || 0) : (scores.B || 0);
+    const scoreAutre = estA ? (scores.B || 0) : (scores.A || 0);
+    totalMoi   += scoreMoi;
+    totalAutre += scoreAutre;
+
+    const clsMoi   = scoreMoi > scoreAutre ? "gagne" : scoreMoi < scoreAutre ? "perd" : "egal";
+    const clsAutre = scoreAutre > scoreMoi ? "gagne" : scoreAutre < scoreMoi ? "perd" : "egal";
+
+    tbody.innerHTML += `
+      <tr>
+        <td class="jeu-nom">${j.emoji} ${j.nom}</td>
+        <td class="score-cell ${clsMoi}">${scoreMoi}</td>
+        <td class="score-cell ${clsAutre}">${scoreAutre}</td>
+      </tr>`;
+  });
+
+  // Totaux
+  tbody.innerHTML += `
+    <tr style="border-top:2px solid #eee; font-weight:700;">
+      <td class="jeu-nom">Total</td>
+      <td class="score-cell ${totalMoi > totalAutre ? 'gagne' : totalMoi < totalAutre ? 'perd' : 'egal'}">${totalMoi}</td>
+      <td class="score-cell ${totalAutre > totalMoi ? 'gagne' : totalAutre < totalMoi ? 'perd' : 'egal'}">${totalAutre}</td>
+    </tr>`;
+
+  document.getElementById("score-total-moi").textContent   = totalMoi;
+  document.getElementById("score-total-autre").textContent = totalAutre;
+
+  // Barre de progression
+  const grand = totalMoi + totalAutre;
+  const pct   = grand > 0 ? Math.round((totalMoi / grand) * 100) : 50;
+  document.getElementById("progress-fill").style.width = pct + "%";
+  document.getElementById("label-barre-a").textContent = `${prenomMoi} — ${totalMoi} pts`;
+  document.getElementById("label-barre-b").textContent = `${prenomAutre} — ${totalAutre} pts`;
+
+  // =====================
+  // STATS
+  // =====================
+  const statsGrid = document.getElementById("stats-grid");
+  let stats = {
+    missions_total: 0, missions_validees: 0,
+    dessins_total: 0,  dessins_gagnes: 0,
+    questions_total: 0, questions_reponsues: 0,
+    boites_total: 0,   boites_ouvertes: 0,
+    concours_total: 0, concours_gagnes: 0
+  };
+
+  const monRole = session.role;
+  const cleScore = estA ? "A" : "B";
+
+  // Charger toutes les sous-collections
+  await Promise.all([
+    new Promise(res => ecouterJeu(session.code, "jeu_points", items => {
+      stats.missions_total    = items.length;
+      stats.missions_validees = items.filter(m => m.validee).length;
+      res();
+    })),
+    new Promise(res => ecouterJeu(session.code, "jeu_pictionary", items => {
+      stats.dessins_total  = items.length;
+      stats.dessins_gagnes = items.filter(d => {
+        const estMonDessin = d.auteur === monRole;
+        if (estMonDessin) return false;
+        return d.valide === true;
+      }).length;
+      res();
+    })),
+    new Promise(res => ecouterJeu(session.code, "jeu_questions", items => {
+      const cleMoi = estA ? "reponseA" : "reponseB";
+      stats.questions_total    = items.length;
+      stats.questions_reponsues = items.filter(q => q[cleMoi]).length;
+      res();
+    })),
+    new Promise(res => ecouterJeu(session.code, "jeu_boite", items => {
+      stats.boites_total   = items.filter(b => b.auteur !== monRole).length;
+      stats.boites_ouvertes = items.filter(b => b.auteur !== monRole && b.ouverte).length;
+      res();
+    })),
+    new Promise(res => ecouterJeu(session.code, "jeu_concours", items => {
+      stats.concours_total  = items.filter(c => c.termine).length;
+      stats.concours_gagnes = items.filter(c => c.termine && c.vainqueur === cleScore).length;
+      res();
+    }))
+  ]);
+
+  statsGrid.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-val">${stats.missions_validees}</div>
+      <div class="stat-lbl">Missions accomplies</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">${stats.questions_reponsues}/${stats.questions_total}</div>
+      <div class="stat-lbl">Questions répondues</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">${stats.dessins_gagnes}</div>
+      <div class="stat-lbl">Dessins devinés</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">${stats.boites_ouvertes}/${stats.boites_total}</div>
+      <div class="stat-lbl">Boîtes ouvertes</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">${stats.concours_gagnes}</div>
+      <div class="stat-lbl">Concours gagnés</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">${stats.missions_total}</div>
+      <div class="stat-lbl">Défis créés</div>
+    </div>`;
+</script>
+</body>
+</html>
