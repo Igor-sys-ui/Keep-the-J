@@ -21,14 +21,14 @@
     .jeu-card.bereal     { border-color: #ff6b9d; }
     .jeu-card.concours   { border-color: #b5a0e8; }
     .jeu-card.carte      { border-color: #6bbf8e; }
-    .jeu-card.profil     { border-color: #aaa; }
-    .jeu-card.escape     { border-color: #aaa; }
     .jeu-card.bientot { opacity: 0.5; cursor: default; pointer-events: none; }
     .jeu-card .bientot-badge { font-size: 0.7rem; background: #eee; color: #999; padding: 2px 8px; border-radius: 20px; }
     .btn-deco { background: none; border: none; color: var(--gris); font-size: 1.3rem; cursor: pointer; padding: 4px; }
     .statut-partenaire { font-size: 0.82rem; color: var(--gris); text-align: center; margin-bottom: 16px; }
     .statut-partenaire .online  { color: var(--vert); font-weight: 700; }
     .statut-partenaire .attente { color: #f4a261; font-weight: 700; }
+
+    /* Bulles */
     .jeu-card { position: relative; }
     .notif-bulle {
       position: absolute; top: -8px; right: -8px;
@@ -44,6 +44,32 @@
       0%,100% { transform: scale(1); }
       50%      { transform: scale(1.15); }
     }
+
+    /* Bandeau profil en bas */
+    .profil-bandeau {
+      background: var(--blanc);
+      border-radius: var(--rayon);
+      box-shadow: var(--ombre);
+      padding: 14px 16px;
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-decoration: none;
+      color: var(--noir);
+      border: 1px solid #eee;
+      transition: box-shadow 0.15s;
+    }
+    .profil-bandeau:hover { box-shadow: 0 6px 24px rgba(26,26,46,0.14); }
+    .profil-bandeau .pb-gauche { display: flex; align-items: center; gap: 12px; }
+    .profil-bandeau .pb-avatar { font-size: 1.6rem; }
+    .profil-bandeau .pb-texte .pb-nom { font-weight: 700; font-size: 0.95rem; }
+    .profil-bandeau .pb-texte .pb-sub { font-size: 0.78rem; color: var(--gris); }
+    .profil-bandeau .pb-scores { display: flex; gap: 14px; align-items: center; }
+    .profil-bandeau .pb-score { text-align: center; }
+    .profil-bandeau .pb-score .val { font-size: 1.2rem; font-weight: 700; color: var(--rose-fonce); }
+    .profil-bandeau .pb-score .lbl { font-size: 0.68rem; color: var(--gris); }
+    .profil-bandeau .pb-fleche { color: #ccc; font-size: 1.1rem; }
   </style>
 </head>
 <body>
@@ -128,12 +154,6 @@
         <span class="desc">Lieux où aller ensemble</span>
       </a>
 
-      <a href="jeux/profil.html" class="jeu-card profil">
-        <span class="emoji">👤</span>
-        <span class="nom">Profils</span>
-        <span class="desc">Scores & statistiques</span>
-      </a>
-
       <a href="jeux/escape.html" class="jeu-card escape bientot">
         <span class="emoji">🗝️</span>
         <span class="nom">Escape Game</span>
@@ -141,6 +161,31 @@
       </a>
 
     </div>
+
+    <hr class="sep">
+
+    <!-- Bandeau profil -->
+    <a href="jeux/profil.html" class="profil-bandeau" id="lien-profil">
+      <div class="pb-gauche">
+        <div class="pb-avatar">👤</div>
+        <div class="pb-texte">
+          <div class="pb-nom" id="pb-nom">Profils & Stats</div>
+          <div class="pb-sub">Scores, statistiques, comparaison</div>
+        </div>
+      </div>
+      <div class="pb-scores">
+        <div class="pb-score">
+          <div class="val" id="pb-score-moi">0</div>
+          <div class="lbl" id="pb-label-moi">Moi</div>
+        </div>
+        <div style="color:#ddd;">vs</div>
+        <div class="pb-score">
+          <div class="val" id="pb-score-autre">0</div>
+          <div class="lbl" id="pb-label-autre">Autre</div>
+        </div>
+      </div>
+      <div class="pb-fleche">›</div>
+    </a>
 
     <hr class="sep">
     <button class="btn btn-gris" onclick="deconnecterSession()">🚪 Quitter le salon</button>
@@ -161,20 +206,45 @@
   const stop = ecouterSalon(session.code, (data) => {
     document.getElementById("chargement").style.display = "none";
     document.getElementById("contenu").style.display    = "block";
-    document.getElementById("nom-a").textContent = data.joueurA?.prenom ?? "Joueur A";
-    document.getElementById("nom-b").textContent = data.joueurB?.prenom ?? "En attente…";
+
+    const prenomA = data.joueurA?.prenom ?? "Joueur A";
+    const prenomB = data.joueurB?.prenom ?? "Joueur B";
+    document.getElementById("nom-a").textContent = prenomA;
+    document.getElementById("nom-b").textContent = data.joueurB ? prenomB : "En attente…";
     document.getElementById("code-affiche").textContent = session.code;
+
+    // Bandeau profil — prénoms et scores
+    const estA = session.role === "joueurA";
+    const prenomMoi   = estA ? prenomA : prenomB;
+    const prenomAutre = estA ? prenomB : prenomA;
+    document.getElementById("pb-label-moi").textContent   = prenomMoi;
+    document.getElementById("pb-label-autre").textContent = prenomAutre;
+
+    const sc = data.scores ?? {};
+    const totalMoi   = (sc.points?.[estA?"A":"B"] || 0)
+                     + (sc.pictionary?.[estA?"A":"B"] || 0)
+                     + (sc.concours?.[estA?"A":"B"] || 0);
+    const totalAutre = (sc.points?.[estA?"B":"A"] || 0)
+                     + (sc.pictionary?.[estA?"B":"A"] || 0)
+                     + (sc.concours?.[estA?"B":"A"] || 0);
+    document.getElementById("pb-score-moi").textContent   = totalMoi;
+    document.getElementById("pb-score-autre").textContent = totalAutre;
+
     const statutEl = document.getElementById("statut-partenaire");
     if (!data.joueurB) {
       statutEl.innerHTML = `<span class="attente">⏳ En attente que l'autre joueur rejoigne…</span><br>Code : <strong>${session.code}</strong>`;
     } else {
-      const p = session.role === "joueurA" ? data.joueurB.prenom : data.joueurA.prenom;
-      statutEl.innerHTML = `<span class="online">✓</span> ${p} est dans le salon`;
+      statutEl.innerHTML = `<span class="online">✓</span> ${prenomAutre} est dans le salon`;
     }
   });
 
-  // ===== BADGE ICÔNE + BULLES =====
+  // ===== NOTIFICATIONS =====
+  // On stocke les IDs vus PAR JEU dans localStorage.
+  // Au clic sur une carte, on copie tous les IDs actuellement connus
+  // → quand on revient, ces IDs sont "vus" et la bulle disparaît.
+
   const comptesParJeu = {};
+  const idsParJeu = {}; // { "points": Set([id1, id2, ...]) }
 
   function majBadgeIcone() {
     const total = Object.values(comptesParJeu).reduce((a, b) => a + b, 0);
@@ -184,53 +254,68 @@
     }
   }
 
-  function afficherBulle(id, nb) {
-    const el = document.getElementById(id);
+  function afficherBulle(jeu, nb) {
+    const el = document.getElementById("notif-" + jeu);
     if (!el) return;
     el.textContent = nb > 9 ? "9+" : String(nb);
     el.style.display = nb > 0 ? "flex" : "none";
-    comptesParJeu[id.replace("notif-", "")] = nb;
+    comptesParJeu[jeu] = nb;
     majBadgeIcone();
   }
 
-  function getVus(jeu) {
-    try { return new Set(JSON.parse(localStorage.getItem(`ktj_vu_${jeu}`) || "[]")); }
+  // IDs déjà vus pour ce jeu (stockés dans localStorage)
+  function getIdsVus(jeu) {
+    try { return new Set(JSON.parse(localStorage.getItem("ktj_vu_" + jeu) || "[]")); }
     catch { return new Set(); }
+  }
+
+  // Marquer tous les IDs connus d'un jeu comme vus
+  function marquerTousVus(jeu) {
+    const ids = idsParJeu[jeu] ?? new Set();
+    localStorage.setItem("ktj_vu_" + jeu, JSON.stringify([...ids]));
+    afficherBulle(jeu, 0);
   }
 
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) majBadgeIcone();
   });
 
+  // Effacer badge quand on ouvre l'app
+  if ("clearAppBadge" in navigator) navigator.clearAppBadge();
+
   const role = session.role;
 
   // Défis : missions de l'autre non validées
   ecouterJeu(session.code, "jeu_points", (items) => {
-    const vus = getVus("points");
+    idsParJeu["points"] = new Set(items.map(m => m.id));
+    const vus = getIdsVus("points");
     const n = items.filter(m => m.auteur !== role && !m.validee && !vus.has(m.id)).length;
-    afficherBulle("notif-points", n);
+    afficherBulle("points", n);
   });
 
   // Boîte Secrète : boîtes reçues non ouvertes
   ecouterJeu(session.code, "jeu_boite", (items) => {
-    const vus = getVus("boite");
+    idsParJeu["boite"] = new Set(items.map(b => b.id));
+    const vus = getIdsVus("boite");
     const n = items.filter(b => b.auteur !== role && !b.ouverte && !vus.has(b.id)).length;
-    afficherBulle("notif-boite", n);
+    afficherBulle("boite", n);
   });
 
   // L'Artiste : dessins reçus sans réponse
   ecouterJeu(session.code, "jeu_pictionary", (items) => {
-    const vus = getVus("pictionary");
+    idsParJeu["pictionary"] = new Set(items.map(d => d.id));
+    const vus = getIdsVus("pictionary");
     const n = items.filter(d =>
       d.auteur !== role && d.valide === null && !d.reponse && !vus.has(d.id)
     ).length;
-    afficherBulle("notif-pictionary", n);
+    afficherBulle("pictionary", n);
   });
 
   // 36 Questions : sans ma réponse OU réponse de l'autre dispo
   ecouterJeu(session.code, "jeu_questions", (items) => {
-    const vus    = getVus("questions");
-    const cleMoi = role === "joueurA" ? "reponseA" : "reponseB";
+    idsParJeu["questions"] = new Set(items.map(q => q.id));
+    const vus    = getIdsVus("questions");
+    const cleMoi   = role === "joueurA" ? "reponseA" : "reponseB";
     const cleAutre = role === "joueurA" ? "reponseB" : "reponseA";
     const n = items.filter(q => {
       if (vus.has(q.id)) return false;
@@ -238,28 +323,31 @@
       if (q[cleAutre]) return true;
       return false;
     }).length;
-    afficherBulle("notif-questions", n);
+    afficherBulle("questions", n);
   });
 
   // Calendrier : nouvelles dates de l'autre
   ecouterJeu(session.code, "jeu_calendrier", (items) => {
-    const vus = getVus("calendrier");
+    idsParJeu["calendrier"] = new Set(items.map(e => e.id));
+    const vus = getIdsVus("calendrier");
     const n = items.filter(e => e.auteur !== role && !vus.has(e.id)).length;
-    afficherBulle("notif-calendrier", n);
+    afficherBulle("calendrier", n);
   });
 
   // Be Real : moment actif où je n'ai pas posté
   ecouterJeu(session.code, "jeu_bereal", (items) => {
+    idsParJeu["bereal"] = new Set(items.map(m => m.id));
     const DUREE_MS = 2 * 60 * 60 * 1000;
     const actif = items.find(m => !m.expire && (Date.now() - m.lanceAt) < DUREE_MS);
-    if (!actif) { afficherBulle("notif-bereal", 0); return; }
+    if (!actif) { afficherBulle("bereal", 0); return; }
     const maPhoto = role === "joueurA" ? actif.photoA : actif.photoB;
-    afficherBulle("notif-bereal", maPhoto ? 0 : 1);
+    afficherBulle("bereal", maPhoto ? 0 : 1);
   });
 
   // Concours Photo : photo à poster ou vote en attente
   ecouterJeu(session.code, "jeu_concours", (items) => {
-    const vus = getVus("concours");
+    idsParJeu["concours"] = new Set(items.map(c => c.id));
+    const vus = getIdsVus("concours");
     const maPhotoCle = role === "joueurA" ? "photoA" : "photoB";
     const monVoteCle = role === "joueurA" ? "voteA"  : "voteB";
     const n = items.filter(c => {
@@ -268,21 +356,22 @@
       if (c.photoA && c.photoB && !c[monVoteCle]) return true;
       return false;
     }).length;
-    afficherBulle("notif-concours", n);
+    afficherBulle("concours", n);
   });
 
   // Notre Carte : nouveaux points de l'autre
   ecouterJeu(session.code, "jeu_carte", (items) => {
-    const vus = getVus("carte");
+    idsParJeu["carte"] = new Set(items.map(p => p.id));
+    const vus = getIdsVus("carte");
     const n = items.filter(p => p.auteur !== role && !vus.has(p.id)).length;
-    afficherBulle("notif-carte", n);
+    afficherBulle("carte", n);
   });
 
-  // Effacer les notifs au clic sur un jeu
+  // Au clic sur une carte : marquer tous les IDs connus comme vus
   document.querySelectorAll(".jeu-card[id]").forEach(card => {
     card.addEventListener("click", () => {
       const jeu = card.id.replace("card-", "");
-      localStorage.removeItem(`ktj_vu_${jeu}`);
+      marquerTousVus(jeu);
     });
   });
 
