@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Be Real — Keep The J</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .lancer-zone { background: var(--blanc); border-radius: var(--rayon); padding: 24px 20px; box-shadow: var(--ombre); margin-bottom: 20px; text-align: center; }
+    .lancer-zone .emoji-big { font-size: 3rem; display: block; margin-bottom: 10px; }
+    .lancer-zone p { color: var(--gris); font-size: 0.9rem; margin-bottom: 16px; }
+    .moment-actif { background: linear-gradient(135deg, var(--rose-fonce), #e07090); border-radius: var(--rayon); padding: 20px; color: white; margin-bottom: 20px; text-align: center; box-shadow: var(--ombre); display: none; }
+    .moment-actif.visible { display: block; }
+    .moment-actif h2 { color: white; margin-bottom: 6px; }
+    .chrono-moment { font-size: 2rem; font-weight: 700; margin: 10px 0; }
+    .moment-actif p { color: rgba(255,255,255,0.85); font-size: 0.88rem; margin-bottom: 14px; }
+    .upload-zone { border: 2px dashed rgba(255,255,255,0.5); border-radius: var(--rayon); padding: 20px; text-align: center; cursor: pointer; color: white; font-size: 0.9rem; margin-bottom: 12px; transition: all 0.2s; }
+    .upload-zone:hover { background: rgba(255,255,255,0.1); }
+    .upload-zone input[type="file"] { display: none; }
+    .apercu-moment { width: 100%; max-height: 220px; object-fit: cover; border-radius: 10px; margin-bottom: 12px; display: none; }
+    .apercu-moment.visible { display: block; }
+    .moment-card { background: var(--blanc); border-radius: var(--rayon); box-shadow: var(--ombre); margin-bottom: 20px; overflow: hidden; }
+    .moment-header { padding: 14px 16px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; }
+    .moment-header .infos { font-size: 0.82rem; color: var(--gris); }
+    .moment-header .date-moment { font-size: 0.78rem; color: #bbb; }
+    .photos-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 0 4px 4px; }
+    .photo-bloc { position: relative; }
+    .photo-bloc img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; display: block; }
+    .photo-bloc .photo-nom { position: absolute; bottom: 6px; left: 6px; background: rgba(0,0,0,0.55); color: white; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+    .photo-attente { width: 100%; height: 180px; background: var(--gris-clair); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; color: var(--gris); font-size: 0.82rem; }
+    .photo-floue { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; display: block; filter: blur(18px); transform: scale(1.05); }
+    .photo-floue-wrap { position: relative; overflow: hidden; border-radius: 8px; }
+    .photo-floue-wrap .overlay-texte { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; color: white; font-weight: 700; font-size: 0.85rem; text-align: center; padding: 10px; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+    .moment-footer { padding: 12px 16px; border-top: 1px solid #f0f0f0; }
+    .moment-footer textarea { margin-bottom: 8px; min-height: 60px; }
+    .badge-expire { background: #fde8e8; color: #a32020; padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; }
+    .badge-ok     { background: #d4f4e2; color: #1a6b3c; padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; }
+    .moment-actions { padding: 10px 16px; border-top: 1px solid #f0f0f0; }
+    .moment-actions .btn { width: auto; padding: 6px 12px; font-size: 0.8rem; }
+    .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; }
+    .vide { text-align: center; padding: 32px 0; color: #bbb; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <a href="../app.html" class="back">←</a>
+    <h1>📸 Be Real</h1>
+  </div>
+
+  <div class="msg msg-info" style="margin-bottom:20px;">
+    Lance un moment, vous avez 2h pour poster une photo chacun. Tu dois poster pour voir celle de l'autre 📷
+  </div>
+
+  <div class="lancer-zone" id="zone-lancer">
+    <span class="emoji-big">📸</span>
+    <p>Lance un "Moment" pour que vous postiez tous les deux une photo de votre vie en ce moment.</p>
+    <button class="btn btn-rose" onclick="lancerMoment()">Lancer un moment 📸</button>
+  </div>
+
+  <div class="moment-actif" id="zone-moment-actif">
+    <h2>📸 Moment en cours !</h2>
+    <p>Temps restant pour poster ta photo :</p>
+    <div class="chrono-moment" id="chrono-affiche">2:00:00</div>
+    <p id="statut-ma-photo">Tu n'as pas encore posté ta photo.</p>
+    <img id="apercu-bereal" class="apercu-moment" alt="Aperçu">
+    <div class="upload-zone" id="zone-upload" onclick="document.getElementById('input-bereal').click()">
+      📷 Choisir ma photo maintenant
+      <input type="file" id="input-bereal" accept="image/*" onchange="chargerPhotoMoment(event)">
+    </div>
+    <div id="msg-bereal"></div>
+    <button class="btn" id="btn-poster-moment"
+      style="background:white;color:var(--rose-fonce);font-weight:700;display:none;"
+      onclick="posterPhoto()">
+      Poster ma photo ✓
+    </button>
+  </div>
+
+  <div class="section-titre">📷 Les moments</div>
+  <div id="fil-moments"><div class="spinner">Chargement…</div></div>
+
+</div>
+<script type="module">
+  import { getSession, connecterFirebase } from "../auth.js";
+  import { ecouterJeu, ajouterItem, modifierItem, supprimerItem, lireSalon } from "../db.js";
+
+  const session = getSession();
+  if (!session.code) { window.location.href = "../index.html"; }
+  await connecterFirebase();
+
+  const DUREE_MS = 2 * 60 * 60 * 1000;
+  // Pour tester avec 10 minutes : remplace par 10 * 60 * 1000
+
+  let prenoms      = { A: "Joueur A", B: "Joueur B" };
+  let photoBase64  = null;
+  let momentActif  = null;
+  let chronoInterval = null;
+
+  const salon = await lireSalon(session.code);
+  if (salon) {
+    prenoms.A = salon.joueurA?.prenom ?? "Joueur A";
+    prenoms.B = salon.joueurB?.prenom ?? "Joueur B";
+  }
+
+  window.lancerMoment = async () => {
+    if (!confirm("Lancer un moment ? Vous aurez tous les deux 2h pour poster une photo !")) return;
+    await ajouterItem(session.code, "jeu_bereal", {
+      lancePar: session.role,
+      lanceAt:  Date.now(),
+      photoA: null, photoB: null,
+      commentA: null, commentB: null,
+      expire: false
+    });
+  };
+
+  window.chargerPhotoMoment = (event) => {
+    const fichier = event.target.files[0];
+    if (!fichier) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 800;
+        const ratio = Math.min(1, MAX / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width  = img.width  * ratio;
+        canvas.height = img.height * ratio;
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        photoBase64 = canvas.toDataURL("image/jpeg", 0.7);
+        const ap = document.getElementById("apercu-bereal");
+        ap.src = photoBase64;
+        ap.classList.add("visible");
+        document.getElementById("btn-poster-moment").style.display = "block";
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(fichier);
+  };
+
+  window.posterPhoto = async () => {
+    if (!photoBase64 || !momentActif) return;
+    const tailleKo = Math.round(photoBase64.length * 0.75 / 1024);
+    if (tailleKo > 900) {
+      document.getElementById("msg-bereal").innerHTML =
+        `<div class="msg msg-err" style="color:white;background:rgba(255,255,255,0.2);">Photo trop lourde, essaie-en une autre.</div>`;
+      return;
+    }
+    const clePhoto = session.role === "joueurA" ? "photoA" : "photoB";
+    await modifierItem(session.code, "jeu_bereal", momentActif.id, { [clePhoto]: photoBase64 });
+    photoBase64 = null;
+    document.getElementById("apercu-bereal").classList.remove("visible");
+    document.getElementById("btn-poster-moment").style.display = "none";
+    document.getElementById("input-bereal").value = "";
+  };
+
+  window.commenter = async (id) => {
+    const cleComment = session.role === "joueurA" ? "commentA" : "commentB";
+    const texte = document.getElementById(`comment-${id}`).value.trim();
+    if (!texte) return;
+    await modifierItem(session.code, "jeu_bereal", id, { [cleComment]: texte });
+  };
+
+  window.supprimerMoment = async (id) => {
+    if (!confirm("Supprimer ce moment ?")) return;
+    await supprimerItem(session.code, "jeu_bereal", id);
+  };
+
+  function demarrerChrono(lanceAt) {
+    if (chronoInterval) clearInterval(chronoInterval);
+    chronoInterval = setInterval(() => {
+      const restant = DUREE_MS - (Date.now() - lanceAt);
+      if (restant <= 0) {
+        clearInterval(chronoInterval);
+        document.getElementById("chrono-affiche").textContent = "⏰ Expiré";
+        return;
+      }
+      const h  = Math.floor(restant / 3600000);
+      const m  = Math.floor((restant % 3600000) / 60000);
+      const s  = Math.floor((restant % 60000) / 1000);
+      document.getElementById("chrono-affiche").textContent =
+        `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+    }, 1000);
+  }
+
+  ecouterJeu(session.code, "jeu_bereal", (moments) => {
+    const fil = document.getElementById("fil-moments");
+
+    const actif = moments.find(m => !m.expire && (Date.now() - m.lanceAt) < DUREE_MS);
+    momentActif = actif ?? null;
+
+    const zoneLancer = document.getElementById("zone-lancer");
+    const zoneActif  = document.getElementById("zone-moment-actif");
+
+    if (actif) {
+      zoneLancer.style.display = "none";
+      zoneActif.classList.add("visible");
+      demarrerChrono(actif.lanceAt);
+      const maPhoto    = session.role === "joueurA" ? actif.photoA : actif.photoB;
+      const statutEl   = document.getElementById("statut-ma-photo");
+      const uploadZone = document.getElementById("zone-upload");
+      if (maPhoto) {
+        statutEl.textContent      = "✓ Photo postée !";
+        uploadZone.style.display  = "none";
+        document.getElementById("btn-poster-moment").style.display = "none";
+      } else {
+        statutEl.textContent      = "Tu n'as pas encore posté ta photo.";
+        uploadZone.style.display  = "block";
+      }
+    } else {
+      zoneLancer.style.display = "block";
+      zoneActif.classList.remove("visible");
+      if (chronoInterval) clearInterval(chronoInterval);
+    }
+
+    const passes = [...moments].filter(m => m !== actif).reverse();
+
+    if (passes.length === 0 && !actif) {
+      fil.innerHTML = `<div class="vide">Aucun moment pour l'instant.<br>Lance le premier ! 📸</div>`;
+      return;
+    }
+    if (passes.length === 0) { fil.innerHTML = ""; return; }
+
+    fil.innerHTML = passes.map(m => {
+      const dateObj     = new Date(m.lanceAt);
+      const dateStr     = dateObj.toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" });
+      const heureStr    = dateObj.toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
+      const estExpire   = (Date.now() - m.lanceAt) >= DUREE_MS;
+      const lancePar    = m.lancePar === "joueurA" ? prenoms.A : prenoms.B;
+      const monRole     = session.role;
+      const maPhoto     = monRole === "joueurA" ? m.photoA : m.photoB;
+      const autrePhoto  = monRole === "joueurA" ? m.photoB : m.photoA;
+      const monPrenom   = monRole === "joueurA" ? prenoms.A : prenoms.B;
+      const autrePrenom = monRole === "joueurA" ? prenoms.B : prenoms.A;
+      const monComment  = monRole === "joueurA" ? m.commentA : m.commentB;
+      const autreComment= monRole === "joueurA" ? m.commentB : m.commentA;
+
+      let photoMoiHtml = maPhoto
+        ? `<div class="photo-bloc"><img src="${maPhoto}" alt="Ma photo"><span class="photo-nom">${monPrenom}</span></div>`
+        : `<div class="photo-bloc"><div class="photo-attente">📷<span>Pas posté</span></div></div>`;
+
+      let photoAutreHtml = "";
+      if (autrePhoto && maPhoto) {
+        photoAutreHtml = `<div class="photo-bloc"><img src="${autrePhoto}" alt="${autrePrenom}"><span class="photo-nom">${autrePrenom}</span></div>`;
+      } else if (autrePhoto && !maPhoto) {
+        photoAutreHtml = `<div class="photo-bloc"><div class="photo-floue-wrap"><img src="${autrePhoto}" class="photo-floue" alt="Flou"><div class="overlay-texte">🔒<br>Poste ta photo pour voir celle de ${autrePrenom}</div></div></div>`;
+      } else {
+        photoAutreHtml = `<div class="photo-bloc"><div class="photo-attente">⏳<span>${autrePrenom} n'a pas encore posté</span></div></div>`;
+      }
+
+      const commentSection = (maPhoto && autrePhoto) ? `
+        <div class="moment-footer">
+          ${autreComment ? `<div style="font-size:0.85rem;color:var(--gris);margin-bottom:8px;"><strong>${autrePrenom} :</strong> ${autreComment}</div>` : ""}
+          ${monComment
+            ? `<div style="font-size:0.85rem;color:var(--gris);"><strong>${monPrenom} :</strong> ${monComment}</div>`
+            : `<div><textarea id="comment-${m.id}" placeholder="Ajouter un commentaire…" style="min-height:50px;margin-bottom:6px;"></textarea>
+               <button class="btn btn-gris" onclick="commenter('${m.id}')" style="padding:8px;">Envoyer</button></div>`}
+        </div>` : "";
+
+      return `
+        <div class="moment-card">
+          <div class="moment-header">
+            <div class="infos">Lancé par <strong>${lancePar}</strong></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              ${estExpire ? `<span class="badge-expire">Expiré</span>` : `<span class="badge-ok">✓ Complété</span>`}
+              <div class="date-moment">${dateStr} · ${heureStr}</div>
+            </div>
+          </div>
+          <div class="photos-duo">${photoMoiHtml}${photoAutreHtml}</div>
+          ${commentSection}
+          <div class="moment-actions">
+            <button class="btn btn-danger" onclick="supprimerMoment('${m.id}')">🗑 Supprimer</button>
+          </div>
+        </div>`;
+    }).join("");
+  });
+</script>
+</body>
+</html>
