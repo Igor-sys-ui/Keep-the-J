@@ -57,6 +57,13 @@ export function ecouterJeu(code, nomJeu, callback) {
   });
 }
 
+// Lire une seule fois tous les documents d'un jeu (pour les stats)
+export async function lireJeuUneFois(code, nomJeu) {
+  const ref  = query(refJeu(code, nomJeu), orderBy("creeAt", "asc"));
+  const snap = await getDocs(ref);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
 // =============================================
 // ÉCRITURE
 // =============================================
@@ -84,9 +91,7 @@ export async function supprimerItem(code, nomJeu, id) {
 
 // Mettre à jour les scores globaux
 export async function mettreAJourScore(code, jeu, role, delta) {
-  // jeu = "points" ou "pictionary"
-  // role = "joueurA" → clé "A", "joueurB" → clé "B"
-  const cle = role === "joueurA" ? "A" : "B";
+  const cle  = role === "joueurA" ? "A" : "B";
   const ref  = refSalon(code);
   const snap = await getDoc(ref);
   if (!snap.exists()) return;
