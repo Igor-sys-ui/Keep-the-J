@@ -3,52 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Météo de l'humeur — Keep The J</title>
+  <title>Profils — Keep The J</title>
   <link rel="stylesheet" href="../style.css">
   <style>
-    /* Humeurs actuelles */
     .humeurs-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
-    .humeur-card { background: var(--blanc); border-radius: var(--rayon); padding: 20px 14px; box-shadow: var(--ombre); text-align: center; }
+    .humeur-card { background: var(--blanc); border-radius: var(--rayon); padding: 16px 12px; box-shadow: var(--ombre); text-align: center; text-decoration: none; transition: transform 0.15s; }
+    .humeur-card:hover { transform: translateY(-2px); }
     .humeur-card.moi   { border-top: 4px solid var(--rose-fonce); }
     .humeur-card.autre { border-top: 4px solid #2a6fc4; }
-    .humeur-emoji-grand { font-size: 3rem; display: block; margin-bottom: 8px; }
-    .humeur-nom-joueur  { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
-    .humeur-label       { font-size: 0.85rem; color: var(--gris); margin-bottom: 4px; }
-    .humeur-depuis      { font-size: 0.72rem; color: #bbb; }
-
-    /* Sélecteur d'humeur */
-    .form-humeur { background: var(--blanc); border-radius: var(--rayon); padding: 20px; box-shadow: var(--ombre); margin-bottom: 24px; }
-    .form-humeur h2 { margin-bottom: 14px; }
-    .grille-humeurs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
-    .humeur-btn {
-      padding: 10px 4px; border: 2px solid #eee; border-radius: 12px;
-      background: var(--blanc); cursor: pointer; text-align: center;
-      transition: all 0.15s; font-size: 0.72rem; color: var(--gris);
-    }
-    .humeur-btn .h-emoji { font-size: 1.6rem; display: block; margin-bottom: 3px; }
-    .humeur-btn:hover   { border-color: var(--rose); background: var(--rose-clair); }
-    .humeur-btn.selec   { border-color: var(--rose-fonce); background: var(--rose-clair); color: var(--rose-fonce); font-weight: 700; }
-
-    /* Note optionnelle */
-    .note-humeur { margin-bottom: 12px; }
-
-    /* Historique */
-    .histo-item { background: var(--blanc); border-radius: var(--rayon); padding: 12px 16px; box-shadow: var(--ombre); margin-bottom: 10px; display: flex; align-items: center; gap: 14px; }
-    .histo-emoji { font-size: 1.8rem; }
-    .histo-corps { flex: 1; }
-    .histo-label { font-weight: 600; font-size: 0.9rem; }
-    .histo-note  { font-size: 0.82rem; color: var(--gris); margin-top: 2px; }
-    .histo-meta  { font-size: 0.72rem; color: #bbb; margin-top: 2px; }
-    .histo-badge { font-size: 0.72rem; padding: 2px 8px; border-radius: 20px; font-weight: 700; }
-    .badge-moi   { background: var(--rose-clair); color: var(--rose-fonce); }
-    .badge-autre { background: #d0eaff; color: #2a6fc4; }
-
-    .tabs { display: flex; background: var(--gris-clair); border-radius: var(--rayon); padding: 4px; margin-bottom: 16px; }
-    .tab  { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--gris); }
-    .tab.actif { background: var(--blanc); color: var(--rose-fonce); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; }
-    .vide { text-align: center; padding: 32px 0; color: #bbb; font-size: 0.9rem; }
-    #panneau-histo { display: none; }
+    .humeur-emoji-grand { font-size: 2.6rem; display: block; margin-bottom: 6px; }
+    .humeur-nom  { font-weight: 700; font-size: 0.9rem; color: var(--noir); }
+    .humeur-lbl  { font-size: 0.8rem; color: var(--gris); margin-top: 2px; }
+    .humeur-hint { font-size: 0.7rem; color: #bbb; margin-top: 4px; }
+    .profils-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .profil-card { background: var(--blanc); border-radius: var(--rayon); padding: 16px; box-shadow: var(--ombre); text-align: center; }
+    .profil-card.moi   { border-top: 4px solid var(--rose-fonce); }
+    .profil-card.autre { border-top: 4px solid #2a6fc4; }
+    .profil-nom  { font-weight: 700; font-size: 1rem; margin-bottom: 2px; }
+    .profil-role { font-size: 0.72rem; color: var(--gris); margin-bottom: 10px; }
+    .score-total { font-size: 2rem; font-weight: 700; color: var(--rose-fonce); }
+    .score-label { font-size: 0.72rem; color: var(--gris); }
+    .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; margin-top: 4px; }
+    .compare-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    .compare-table th { font-size: 0.78rem; color: var(--gris); font-weight: 600; padding: 8px 6px; text-align: center; border-bottom: 2px solid #eee; }
+    .compare-table th.jeu-col { text-align: left; }
+    .compare-table td { padding: 10px 6px; text-align: center; border-bottom: 1px solid #f5f5f5; font-size: 0.9rem; }
+    .compare-table td.jeu-nom { text-align: left; font-weight: 600; font-size: 0.85rem; color: var(--noir); }
+    .score-cell { font-weight: 700; font-size: 1rem; }
+    .score-cell.gagne { color: var(--vert); }
+    .score-cell.perd  { color: var(--rouge); }
+    .score-cell.egal  { color: var(--gris); }
+    .reset-btn { font-size: 0.72rem; color: #bbb; background: none; border: 1px solid #eee; border-radius: 20px; padding: 2px 8px; cursor: pointer; }
+    .reset-btn:hover { color: var(--rouge); border-color: var(--rouge); }
+    .reset-demande { background: #fff8e1; border-radius: 10px; padding: 10px 14px; font-size: 0.82rem; color: #7a6000; margin-bottom: 12px; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+    .stat-card { background: var(--blanc); border-radius: var(--rayon); padding: 14px; box-shadow: var(--ombre); text-align: center; }
+    .stat-val  { font-size: 1.8rem; font-weight: 700; color: var(--rose-fonce); line-height: 1; }
+    .stat-lbl  { font-size: 0.72rem; color: var(--gris); margin-top: 4px; }
+    .progress-wrap { margin-bottom: 20px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px; }
+    .progress-label .nom-a { color: var(--rose-fonce); font-weight: 700; }
+    .progress-label .nom-b { color: #2a6fc4; font-weight: 700; }
+    .progress-bar { height: 12px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--rose-fonce), var(--rose)); transition: width 0.6s ease; }
+    .favori-card { background: var(--blanc); border-radius: var(--rayon); padding: 14px; box-shadow: var(--ombre); margin-bottom: 10px; border-left: 4px solid #f9c74f; }
+    .favori-jeu  { font-size: 0.72rem; color: var(--gris); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .favori-texte { font-size: 0.9rem; font-weight: 600; }
+    .favori-meta  { font-size: 0.72rem; color: #bbb; margin-top: 4px; }
+    .vide { text-align: center; padding: 24px 0; color: #bbb; font-size: 0.9rem; }
   </style>
 </head>
 <body>
@@ -56,208 +58,316 @@
 
   <div class="header">
     <a href="../app.html" class="back">←</a>
-    <h1>🌤️ Météo de l'humeur</h1>
+    <h1>👤 Profils & Stats</h1>
   </div>
 
-  <!-- Humeurs actuelles -->
-  <div class="humeurs-duo">
-    <div class="humeur-card moi">
-      <span class="humeur-emoji-grand" id="emoji-moi">❓</span>
-      <div class="humeur-nom-joueur" id="nom-moi">—</div>
-      <div class="humeur-label" id="label-moi">Pas encore renseigné</div>
-      <div class="humeur-depuis" id="depuis-moi"></div>
+  <div id="chargement" class="spinner">Chargement…</div>
+  <div id="erreur" style="display:none;" class="msg msg-err"></div>
+
+  <div id="contenu" style="display:none;">
+
+    <!-- Météo de l'humeur -->
+    <div class="section-titre">🌤️ Météo de l'humeur</div>
+    <div class="humeurs-duo">
+      <a href="humeur.html" class="humeur-card moi">
+        <span class="humeur-emoji-grand" id="emoji-moi">❓</span>
+        <div class="humeur-nom"  id="nom-humeur-moi">—</div>
+        <div class="humeur-lbl"  id="lbl-humeur-moi">Non renseigné</div>
+        <div class="humeur-hint">Appuie pour changer</div>
+      </a>
+      <a href="humeur.html" class="humeur-card autre">
+        <span class="humeur-emoji-grand" id="emoji-autre">❓</span>
+        <div class="humeur-nom"  id="nom-humeur-autre">—</div>
+        <div class="humeur-lbl"  id="lbl-humeur-autre">Non renseigné</div>
+        <div class="humeur-hint">Voir l'historique</div>
+      </a>
     </div>
-    <div class="humeur-card autre">
-      <span class="humeur-emoji-grand" id="emoji-autre">❓</span>
-      <div class="humeur-nom-joueur" id="nom-autre">—</div>
-      <div class="humeur-label" id="label-autre">Pas encore renseigné</div>
-      <div class="humeur-depuis" id="depuis-autre"></div>
-    </div>
-  </div>
 
-  <!-- Onglets -->
-  <div class="tabs">
-    <button class="tab actif" onclick="afficherOnglet('choisir')">🌤️ Mon humeur</button>
-    <button class="tab"       onclick="afficherOnglet('histo')">📅 Historique</button>
-  </div>
-
-  <!-- CHOISIR HUMEUR -->
-  <div id="panneau-choisir">
-    <div class="form-humeur">
-      <h2>Comment tu te sens ?</h2>
-      <div class="grille-humeurs" id="grille-humeurs"></div>
-      <div class="note-humeur">
-        <label for="note-humeur">Un mot, une note (optionnel)</label>
-        <input type="text" id="note-humeur" placeholder="Ex : Grande réunion ce matin, un peu nerveux…" maxlength="100">
+    <!-- Scores -->
+    <div class="section-titre">🏆 Scores</div>
+    <div class="profils-duo">
+      <div class="profil-card moi">
+        <div class="profil-nom"  id="nom-moi">—</div>
+        <div class="profil-role" id="role-moi">—</div>
+        <div class="score-total" id="score-total-moi">0</div>
+        <div class="score-label">pts total</div>
       </div>
-      <div id="msg-humeur"></div>
-      <button class="btn btn-rose" onclick="posterHumeur()">Partager mon humeur 🌤️</button>
+      <div class="profil-card autre">
+        <div class="profil-nom"  id="nom-autre">—</div>
+        <div class="profil-role" id="role-autre">—</div>
+        <div class="score-total" id="score-total-autre">0</div>
+        <div class="score-label">pts total</div>
+      </div>
     </div>
-  </div>
 
-  <!-- HISTORIQUE -->
-  <div id="panneau-histo">
-    <div class="tabs" style="margin-bottom:12px;">
-      <button class="tab actif" id="tab-tous"  onclick="filtrerHisto('tous', this)">Tous</button>
-      <button class="tab"       id="tab-moi"   onclick="filtrerHisto('moi', this)" id="tab-moi-btn">Moi</button>
-      <button class="tab"       id="tab-autre" onclick="filtrerHisto('autre', this)">L'autre</button>
+    <div class="section-titre">⚖️ Score global</div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span class="nom-a" id="label-barre-a">—</span>
+        <span class="nom-b" id="label-barre-b">—</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:50%"></div>
+      </div>
     </div>
-    <div id="liste-histo"><div class="spinner">Chargement…</div></div>
-  </div>
 
+    <div class="section-titre">🎮 Scores par jeu</div>
+    <!-- Zone affichage demandes de reset en attente -->
+    <div id="zone-resets"></div>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th class="jeu-col">Jeu</th>
+          <th id="th-moi">Moi</th>
+          <th id="th-autre">Autre</th>
+          <th>↺</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-scores"></tbody>
+    </table>
+
+    <!-- Stats -->
+    <div class="section-titre">📊 Mes statistiques</div>
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <!-- Favoris -->
+    <div class="section-titre">❤️ Mes favoris</div>
+    <div id="liste-favoris"><div class="spinner">Chargement…</div></div>
+
+  </div>
 </div>
+
 <script type="module">
-  import { getSession, connecterFirebase } from "../auth.js";
-  import { ecouterJeu, ajouterItem, lireSalon } from "../db.js";
+  import { getSession, connecterFirebase, ecouterSalon } from "../auth.js";
+  import { lireSalon, lireJeuUneFois, ecouterJeu } from "../db.js";
+  import { db } from "../firebase-config.js";
+  import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
   const session = getSession();
   if (!session.code) { window.location.href = "../index.html"; }
-  await connecterFirebase();
 
-  let prenoms = { A: "Joueur A", B: "Joueur B" };
-  let humeurSelectee = null;
-  let toutLHisto = [];
-  let filtreCourant = "tous";
+  try {
+    await connecterFirebase();
+    const salon = await lireSalon(session.code);
+    if (!salon) throw new Error("Salon introuvable.");
 
-  const HUMEURS = [
-    { id: "joie",      emoji: "😄", label: "Joie" },
-    { id: "amour",     emoji: "🥰", label: "Amoureux" },
-    { id: "detente",   emoji: "😌", label: "Détendu" },
-    { id: "surprise",  emoji: "😲", label: "Surpris" },
-    { id: "fatigue",   emoji: "😴", label: "Fatigué" },
-    { id: "stress",    emoji: "😰", label: "Stressé" },
-    { id: "tristesse", emoji: "😢", label: "Triste" },
-    { id: "peur",      emoji: "😨", label: "Peur" },
-    { id: "colere",    emoji: "😠", label: "Colère" },
-    { id: "degout",    emoji: "🤢", label: "Dégoûté" },
-    { id: "aigri",     emoji: "😒", label: "Aigri" },
-    { id: "neutre",    emoji: "😐", label: "Neutre" },
-  ];
+    const estA        = session.role === "joueurA";
+    const prenomA     = salon.joueurA?.prenom ?? "Joueur A";
+    const prenomB     = salon.joueurB?.prenom ?? "Joueur B";
+    const prenomMoi   = estA ? prenomA : prenomB;
+    const prenomAutre = estA ? prenomB : prenomA;
+    const cleScore    = estA ? "A" : "B";
+    const cleAutre2   = estA ? "B" : "A";
 
-  const salon = await lireSalon(session.code);
-  if (salon) {
-    prenoms.A = salon.joueurA?.prenom ?? "Joueur A";
-    prenoms.B = salon.joueurB?.prenom ?? "Joueur B";
-  }
+    document.getElementById("nom-moi").textContent         = prenomMoi;
+    document.getElementById("nom-autre").textContent       = prenomAutre;
+    document.getElementById("role-moi").textContent        = estA ? "Joueur A" : "Joueur B";
+    document.getElementById("role-autre").textContent      = estA ? "Joueur B" : "Joueur A";
+    document.getElementById("th-moi").textContent          = prenomMoi;
+    document.getElementById("th-autre").textContent        = prenomAutre;
+    document.getElementById("nom-humeur-moi").textContent  = prenomMoi;
+    document.getElementById("nom-humeur-autre").textContent= prenomAutre;
 
-  const prenomMoi   = session.role === "joueurA" ? prenoms.A : prenoms.B;
-  const prenomAutre = session.role === "joueurA" ? prenoms.B : prenoms.A;
-  document.getElementById("nom-moi").textContent   = prenomMoi;
-  document.getElementById("nom-autre").textContent = prenomAutre;
-
-  // Grille des humeurs
-  const grille = document.getElementById("grille-humeurs");
-  grille.innerHTML = HUMEURS.map(h => `
-    <button class="humeur-btn" id="btn-h-${h.id}" onclick="selecHumeur('${h.id}', this)">
-      <span class="h-emoji">${h.emoji}</span>
-      ${h.label}
-    </button>`).join("");
-
-  window.selecHumeur = (id, el) => {
-    document.querySelectorAll(".humeur-btn").forEach(b => b.classList.remove("selec"));
-    el.classList.add("selec");
-    humeurSelectee = HUMEURS.find(h => h.id === id);
-  };
-
-  window.afficherOnglet = (onglet) => {
-    document.getElementById("panneau-choisir").style.display = onglet === "choisir" ? "block" : "none";
-    document.getElementById("panneau-histo").style.display   = onglet === "histo"   ? "block" : "none";
-    document.querySelectorAll(".tabs:first-of-type .tab").forEach((t, i) => {
-      t.classList.toggle("actif", (i === 0 && onglet === "choisir") || (i === 1 && onglet === "histo"));
+    // ===== HUMEUR =====
+    ecouterJeu(session.code, "jeu_humeur", (items) => {
+      const derniereMoi   = [...items].filter(h => h.auteur === session.role)
+                            .sort((a,b) => (b.horodatage||0)-(a.horodatage||0))[0];
+      const derniereAutre = [...items].filter(h => h.auteur !== session.role)
+                            .sort((a,b) => (b.horodatage||0)-(a.horodatage||0))[0];
+      if (derniereMoi) {
+        document.getElementById("emoji-moi").textContent    = derniereMoi.emoji;
+        document.getElementById("lbl-humeur-moi").textContent = derniereMoi.label;
+      }
+      if (derniereAutre) {
+        document.getElementById("emoji-autre").textContent    = derniereAutre.emoji;
+        document.getElementById("lbl-humeur-autre").textContent = derniereAutre.label;
+      }
     });
-  };
 
-  window.posterHumeur = async () => {
-    const msgEl = document.getElementById("msg-humeur");
-    if (!humeurSelectee) { msgEl.innerHTML = `<div class="msg msg-err">Choisis une humeur d'abord.</div>`; return; }
-    const note = document.getElementById("note-humeur").value.trim();
-    try {
-      await ajouterItem(session.code, "jeu_humeur", {
-        humeurId: humeurSelectee.id,
-        emoji:    humeurSelectee.emoji,
-        label:    humeurSelectee.label,
-        note,
-        auteur:   session.role,
-        horodatage: Date.now()
+    // ===== JEUX avec scores =====
+    const JEUX_SCORES = [
+      { key: "points",     emoji: "🏆", nom: "Défis" },
+      { key: "pictionary", emoji: "🎨", nom: "L'Artiste" },
+      { key: "concours",   emoji: "🏅", nom: "Concours Photo" },
+    ];
+
+    function afficherScores(sc, resetsDemandes) {
+      let totalMoi = 0, totalAutre = 0;
+      const tbody = document.getElementById("tbody-scores");
+      tbody.innerHTML = "";
+
+      JEUX_SCORES.forEach(j => {
+        const scores     = sc[j.key] ?? { A: 0, B: 0 };
+        const scoreMoi   = scores[cleScore]  || 0;
+        const scoreAutre = scores[cleAutre2] || 0;
+        totalMoi   += scoreMoi;
+        totalAutre += scoreAutre;
+        const clsMoi   = scoreMoi > scoreAutre ? "gagne" : scoreMoi < scoreAutre ? "perd" : "egal";
+        const clsAutre = scoreAutre > scoreMoi ? "gagne" : scoreAutre < scoreMoi ? "perd" : "egal";
+        // Le bouton reset est désactivé si une demande est déjà en cours pour ce jeu
+        const demandeEnCours = resetsDemandes?.[j.key];
+        const btnReset = demandeEnCours
+          ? `<span style="font-size:0.7rem;color:#f4a261;">⏳</span>`
+          : `<button class="reset-btn" onclick="demanderResetJeu('${j.key}','${j.nom}')">↺</button>`;
+        tbody.innerHTML += `
+          <tr>
+            <td class="jeu-nom">${j.emoji} ${j.nom}</td>
+            <td class="score-cell ${clsMoi}">${scoreMoi}</td>
+            <td class="score-cell ${clsAutre}">${scoreAutre}</td>
+            <td>${btnReset}</td>
+          </tr>`;
       });
-      document.getElementById("note-humeur").value = "";
-      document.querySelectorAll(".humeur-btn").forEach(b => b.classList.remove("selec"));
-      humeurSelectee = null;
-      msgEl.innerHTML = `<div class="msg msg-ok">Humeur partagée ! ✓</div>`;
-      setTimeout(() => msgEl.innerHTML = "", 2500);
-    } catch(e) {
-      msgEl.innerHTML = `<div class="msg msg-err">Erreur : ${e.message}</div>`;
-    }
-  };
 
-  function tempsDepuis(ts) {
-    const diff = Date.now() - ts;
-    const min  = Math.floor(diff / 60000);
-    const h    = Math.floor(diff / 3600000);
-    const j    = Math.floor(diff / 86400000);
-    if (min < 1)  return "À l'instant";
-    if (min < 60) return `Il y a ${min} min`;
-    if (h < 24)   return `Il y a ${h}h`;
-    return `Il y a ${j} jour${j > 1 ? "s" : ""}`;
+      tbody.innerHTML += `
+        <tr style="border-top:2px solid #eee;font-weight:700;">
+          <td class="jeu-nom">Total</td>
+          <td class="score-cell ${totalMoi>totalAutre?"gagne":totalMoi<totalAutre?"perd":"egal"}">${totalMoi}</td>
+          <td class="score-cell ${totalAutre>totalMoi?"gagne":totalAutre<totalMoi?"perd":"egal"}">${totalAutre}</td>
+          <td></td>
+        </tr>`;
+
+      document.getElementById("score-total-moi").textContent   = totalMoi;
+      document.getElementById("score-total-autre").textContent = totalAutre;
+      const grand = totalMoi + totalAutre;
+      const pct   = grand > 0 ? Math.round((totalMoi / grand) * 100) : 50;
+      document.getElementById("progress-fill").style.width = pct + "%";
+      document.getElementById("label-barre-a").textContent = `${prenomMoi} — ${totalMoi} pts`;
+      document.getElementById("label-barre-b").textContent = `${prenomAutre} — ${totalAutre} pts`;
+
+      // Afficher les demandes de reset en attente
+      const zoneResets = document.getElementById("zone-resets");
+      if (!resetsDemandes) { zoneResets.innerHTML = ""; return; }
+      let html = "";
+      JEUX_SCORES.forEach(j => {
+        const demande = resetsDemandes[j.key];
+        if (!demande) return;
+        if (demande.demandePar === session.role) {
+          // J'ai demandé, j'attends l'autre
+          html += `<div class="reset-demande">
+            ⏳ Tu as demandé la remise à zéro de <strong>${j.nom}</strong>.<br>
+            En attente de confirmation de <strong>${prenomAutre}</strong>…
+            <br><button class="btn btn-gris" onclick="annulerResetJeu('${j.key}')"
+              style="width:auto;padding:6px 12px;font-size:0.8rem;margin-top:8px;">
+              Annuler
+            </button>
+          </div>`;
+        } else {
+          // L'autre a demandé, je peux confirmer
+          html += `<div class="reset-demande">
+            <strong>${prenomAutre}</strong> demande la remise à zéro de <strong>${j.nom}</strong>.
+            <br>
+            <button class="btn btn-vert" onclick="confirmerResetJeu('${j.key}')"
+              style="width:auto;padding:8px 14px;font-size:0.85rem;margin-top:8px;">
+              ✓ Confirmer
+            </button>
+            <button class="btn btn-danger" onclick="annulerResetJeu('${j.key}')"
+              style="width:auto;padding:8px 14px;font-size:0.85rem;margin-top:8px;margin-left:8px;">
+              ✗ Refuser
+            </button>
+          </div>`;
+        }
+      });
+      zoneResets.innerHTML = html;
+    }
+
+    // ===== RESET PAR JEU =====
+    window.demanderResetJeu = async (key, nom) => {
+      if (!confirm(`Demander la remise à zéro des scores de "${nom}" ?\n${prenomAutre} devra confirmer.`)) return;
+      await updateDoc(doc(db, "salons", session.code), {
+        [`resetDemande.${key}`]: { demandePar: session.role, ts: Date.now() }
+      });
+    };
+
+    window.confirmerResetJeu = async (key) => {
+      if (!confirm("Confirmer la remise à zéro ?")) return;
+      await updateDoc(doc(db, "salons", session.code), {
+        [`scores.${key}`]: { A: 0, B: 0 },
+        [`resetDemande.${key}`]: null
+      });
+    };
+
+    window.annulerResetJeu = async (key) => {
+      await updateDoc(doc(db, "salons", session.code), {
+        [`resetDemande.${key}`]: null
+      });
+    };
+
+    // Écouter en temps réel
+    ecouterSalon(session.code, (data) => {
+      afficherScores(data.scores ?? {}, data.resetDemande ?? null);
+    });
+
+    // ===== STATS =====
+    const [points, dessins, questions, boites, concours] = await Promise.all([
+      lireJeuUneFois(session.code, "jeu_points"),
+      lireJeuUneFois(session.code, "jeu_pictionary"),
+      lireJeuUneFois(session.code, "jeu_questions"),
+      lireJeuUneFois(session.code, "jeu_boite"),
+      lireJeuUneFois(session.code, "jeu_concours"),
+    ]);
+
+    const cleMoi = estA ? "reponseA" : "reponseB";
+    document.getElementById("stats-grid").innerHTML = `
+      <div class="stat-card">
+        <div class="stat-val">${points.filter(m => m.validee).length}</div>
+        <div class="stat-lbl">Missions accomplies</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${points.length}</div>
+        <div class="stat-lbl">Missions créées</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${questions.filter(q => q[cleMoi]).length}/${questions.length}</div>
+        <div class="stat-lbl">Questions répondues</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${dessins.filter(d => d.auteur !== session.role && d.valide === true).length}</div>
+        <div class="stat-lbl">Dessins devinés</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${boites.filter(b => b.auteur !== session.role && b.ouverte).length}/${boites.filter(b => b.auteur !== session.role).length}</div>
+        <div class="stat-lbl">Boîtes ouvertes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${concours.filter(c => c.termine && c.vainqueur === cleScore).length}/${concours.filter(c => c.termine).length}</div>
+        <div class="stat-lbl">Concours gagnés</div>
+      </div>`;
+
+    // ===== FAVORIS =====
+    const NOMS_JEUX = {
+      "jeu_points":    "🏆 Défis",
+      "jeu_boite":     "🔒 Boîte Secrète",
+      "jeu_pictionary":"🎨 L'Artiste",
+      "jeu_questions": "💬 36 Questions",
+      "jeu_calendrier":"📅 Calendrier",
+      "jeu_concours":  "🏅 Concours Photo",
+      "jeu_carte":     "🗺️ Notre Carte"
+    };
+    const tousLesFavoris = await lireJeuUneFois(session.code, "jeu_favoris");
+    const mesFavoris     = tousLesFavoris.filter(f => f.auteur === session.role);
+    const listeFavEl     = document.getElementById("liste-favoris");
+    if (mesFavoris.length === 0) {
+      listeFavEl.innerHTML = `<div class="vide">Aucun favori.<br>Appuie sur 🤍 sur n'importe quelle carte d'un jeu !</div>`;
+    } else {
+      listeFavEl.innerHTML = mesFavoris
+        .sort((a,b) => (b.ts||0)-(a.ts||0))
+        .map(f => `
+          <div class="favori-card">
+            <div class="favori-jeu">${NOMS_JEUX[f.jeu] ?? f.jeu}</div>
+            <div class="favori-texte">${f.apercu ?? "Élément favori"}</div>
+            <div class="favori-meta">${new Date(f.ts||0).toLocaleDateString("fr-FR")}</div>
+          </div>`).join("");
+    }
+
+    document.getElementById("chargement").style.display = "none";
+    document.getElementById("contenu").style.display    = "block";
+
+  } catch(e) {
+    document.getElementById("chargement").style.display = "none";
+    document.getElementById("erreur").style.display     = "block";
+    document.getElementById("erreur").textContent       = "Erreur : " + e.message;
+    console.error(e);
   }
-
-  window.filtrerHisto = (filtre, btn) => {
-    filtreCourant = filtre;
-    document.querySelectorAll("#panneau-histo .tabs .tab").forEach(t => t.classList.remove("actif"));
-    btn.classList.add("actif");
-    afficherHisto();
-  };
-
-  function afficherHisto() {
-    const liste = document.getElementById("liste-histo");
-    let items = [...toutLHisto].sort((a, b) => (b.horodatage || 0) - (a.horodatage || 0));
-    if (filtreCourant === "moi")   items = items.filter(h => h.auteur === session.role);
-    if (filtreCourant === "autre") items = items.filter(h => h.auteur !== session.role);
-    if (items.length === 0) {
-      liste.innerHTML = `<div class="vide">Aucune humeur ici pour l'instant.</div>`;
-      return;
-    }
-    liste.innerHTML = items.map(h => {
-      const estMoi       = h.auteur === session.role;
-      const prenomAuteur = h.auteur === "joueurA" ? prenoms.A : prenoms.B;
-      return `
-        <div class="histo-item">
-          <div class="histo-emoji">${h.emoji}</div>
-          <div class="histo-corps">
-            <div class="histo-label">${h.label}</div>
-            ${h.note ? `<div class="histo-note">${h.note}</div>` : ""}
-            <div class="histo-meta">
-              <span class="histo-badge ${estMoi ? "badge-moi" : "badge-autre"}">${prenomAuteur}</span>
-              · ${tempsDepuis(h.horodatage || 0)}
-            </div>
-          </div>
-        </div>`;
-    }).join("");
-  }
-
-  ecouterJeu(session.code, "jeu_humeur", (items) => {
-    toutLHisto = items;
-
-    // Dernière humeur de chaque joueur pour l'affichage en haut
-    const derniereA = [...items].filter(h => h.auteur === "joueurA").sort((a, b) => (b.horodatage||0) - (a.horodatage||0))[0];
-    const derniereB = [...items].filter(h => h.auteur === "joueurB").sort((a, b) => (b.horodatage||0) - (a.horodatage||0))[0];
-
-    const derniereMoi   = session.role === "joueurA" ? derniereA : derniereB;
-    const derniereAutre = session.role === "joueurA" ? derniereB : derniereA;
-
-    if (derniereMoi) {
-      document.getElementById("emoji-moi").textContent  = derniereMoi.emoji;
-      document.getElementById("label-moi").textContent  = derniereMoi.label;
-      document.getElementById("depuis-moi").textContent = tempsDepuis(derniereMoi.horodatage || 0);
-    }
-    if (derniereAutre) {
-      document.getElementById("emoji-autre").textContent  = derniereAutre.emoji;
-      document.getElementById("label-autre").textContent  = derniereAutre.label;
-      document.getElementById("depuis-autre").textContent = tempsDepuis(derniereAutre.horodatage || 0);
-    }
-
-    afficherHisto();
-  });
 </script>
 </body>
 </html>
