@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Météo de l'humeur — Keep The J</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    /* Humeurs actuelles */
+    .humeurs-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .humeur-card { background: var(--blanc); border-radius: var(--rayon); padding: 20px 14px; box-shadow: var(--ombre); text-align: center; }
+    .humeur-card.moi   { border-top: 4px solid var(--rose-fonce); }
+    .humeur-card.autre { border-top: 4px solid #2a6fc4; }
+    .humeur-emoji-grand { font-size: 3rem; display: block; margin-bottom: 8px; }
+    .humeur-nom-joueur  { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+    .humeur-label       { font-size: 0.85rem; color: var(--gris); margin-bottom: 4px; }
+    .humeur-depuis      { font-size: 0.72rem; color: #bbb; }
+
+    /* Sélecteur d'humeur */
+    .form-humeur { background: var(--blanc); border-radius: var(--rayon); padding: 20px; box-shadow: var(--ombre); margin-bottom: 24px; }
+    .form-humeur h2 { margin-bottom: 14px; }
+    .grille-humeurs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+    .humeur-btn {
+      padding: 10px 4px; border: 2px solid #eee; border-radius: 12px;
+      background: var(--blanc); cursor: pointer; text-align: center;
+      transition: all 0.15s; font-size: 0.72rem; color: var(--gris);
+    }
+    .humeur-btn .h-emoji { font-size: 1.6rem; display: block; margin-bottom: 3px; }
+    .humeur-btn:hover   { border-color: var(--rose); background: var(--rose-clair); }
+    .humeur-btn.selec   { border-color: var(--rose-fonce); background: var(--rose-clair); color: var(--rose-fonce); font-weight: 700; }
+
+    /* Note optionnelle */
+    .note-humeur { margin-bottom: 12px; }
+
+    /* Historique */
+    .histo-item { background: var(--blanc); border-radius: var(--rayon); padding: 12px 16px; box-shadow: var(--ombre); margin-bottom: 10px; display: flex; align-items: center; gap: 14px; }
+    .histo-emoji { font-size: 1.8rem; }
+    .histo-corps { flex: 1; }
+    .histo-label { font-weight: 600; font-size: 0.9rem; }
+    .histo-note  { font-size: 0.82rem; color: var(--gris); margin-top: 2px; }
+    .histo-meta  { font-size: 0.72rem; color: #bbb; margin-top: 2px; }
+    .histo-badge { font-size: 0.72rem; padding: 2px 8px; border-radius: 20px; font-weight: 700; }
+    .badge-moi   { background: var(--rose-clair); color: var(--rose-fonce); }
+    .badge-autre { background: #d0eaff; color: #2a6fc4; }
+
+    .tabs { display: flex; background: var(--gris-clair); border-radius: var(--rayon); padding: 4px; margin-bottom: 16px; }
+    .tab  { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--gris); }
+    .tab.actif { background: var(--blanc); color: var(--rose-fonce); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; }
+    .vide { text-align: center; padding: 32px 0; color: #bbb; font-size: 0.9rem; }
+    #panneau-histo { display: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <a href="../app.html" class="back">←</a>
+    <h1>🌤️ Météo de l'humeur</h1>
+  </div>
+
+  <!-- Humeurs actuelles -->
+  <div class="humeurs-duo">
+    <div class="humeur-card moi">
+      <span class="humeur-emoji-grand" id="emoji-moi">❓</span>
+      <div class="humeur-nom-joueur" id="nom-moi">—</div>
+      <div class="humeur-label" id="label-moi">Pas encore renseigné</div>
+      <div class="humeur-depuis" id="depuis-moi"></div>
+    </div>
+    <div class="humeur-card autre">
+      <span class="humeur-emoji-grand" id="emoji-autre">❓</span>
+      <div class="humeur-nom-joueur" id="nom-autre">—</div>
+      <div class="humeur-label" id="label-autre">Pas encore renseigné</div>
+      <div class="humeur-depuis" id="depuis-autre"></div>
+    </div>
+  </div>
+
+  <!-- Onglets -->
+  <div class="tabs">
+    <button class="tab actif" onclick="afficherOnglet('choisir')">🌤️ Mon humeur</button>
+    <button class="tab"       onclick="afficherOnglet('histo')">📅 Historique</button>
+  </div>
+
+  <!-- CHOISIR HUMEUR -->
+  <div id="panneau-choisir">
+    <div class="form-humeur">
+      <h2>Comment tu te sens ?</h2>
+      <div class="grille-humeurs" id="grille-humeurs"></div>
+      <div class="note-humeur">
+        <label for="note-humeur">Un mot, une note (optionnel)</label>
+        <input type="text" id="note-humeur" placeholder="Ex : Grande réunion ce matin, un peu nerveux…" maxlength="100">
+      </div>
+      <div id="msg-humeur"></div>
+      <button class="btn btn-rose" onclick="posterHumeur()">Partager mon humeur 🌤️</button>
+    </div>
+  </div>
+
+  <!-- HISTORIQUE -->
+  <div id="panneau-histo">
+    <div class="tabs" style="margin-bottom:12px;">
+      <button class="tab actif" id="tab-tous"  onclick="filtrerHisto('tous', this)">Tous</button>
+      <button class="tab"       id="tab-moi"   onclick="filtrerHisto('moi', this)" id="tab-moi-btn">Moi</button>
+      <button class="tab"       id="tab-autre" onclick="filtrerHisto('autre', this)">L'autre</button>
+    </div>
+    <div id="liste-histo"><div class="spinner">Chargement…</div></div>
+  </div>
+
+</div>
+<script type="module">
+  import { getSession, connecterFirebase } from "../auth.js";
+  import { ecouterJeu, ajouterItem, lireSalon } from "../db.js";
+
+  const session = getSession();
+  if (!session.code) { window.location.href = "../index.html"; }
+  await connecterFirebase();
+
+  let prenoms = { A: "Joueur A", B: "Joueur B" };
+  let humeurSelectee = null;
+  let toutLHisto = [];
+  let filtreCourant = "tous";
+
+  const HUMEURS = [
+    { id: "joie",      emoji: "😄", label: "Joie" },
+    { id: "amour",     emoji: "🥰", label: "Amoureux" },
+    { id: "detente",   emoji: "😌", label: "Détendu" },
+    { id: "surprise",  emoji: "😲", label: "Surpris" },
+    { id: "fatigue",   emoji: "😴", label: "Fatigué" },
+    { id: "stress",    emoji: "😰", label: "Stressé" },
+    { id: "tristesse", emoji: "😢", label: "Triste" },
+    { id: "peur",      emoji: "😨", label: "Peur" },
+    { id: "colere",    emoji: "😠", label: "Colère" },
+    { id: "degout",    emoji: "🤢", label: "Dégoûté" },
+    { id: "aigri",     emoji: "😒", label: "Aigri" },
+    { id: "neutre",    emoji: "😐", label: "Neutre" },
+  ];
+
+  const salon = await lireSalon(session.code);
+  if (salon) {
+    prenoms.A = salon.joueurA?.prenom ?? "Joueur A";
+    prenoms.B = salon.joueurB?.prenom ?? "Joueur B";
+  }
+
+  const prenomMoi   = session.role === "joueurA" ? prenoms.A : prenoms.B;
+  const prenomAutre = session.role === "joueurA" ? prenoms.B : prenoms.A;
+  document.getElementById("nom-moi").textContent   = prenomMoi;
+  document.getElementById("nom-autre").textContent = prenomAutre;
+
+  // Grille des humeurs
+  const grille = document.getElementById("grille-humeurs");
+  grille.innerHTML = HUMEURS.map(h => `
+    <button class="humeur-btn" id="btn-h-${h.id}" onclick="selecHumeur('${h.id}', this)">
+      <span class="h-emoji">${h.emoji}</span>
+      ${h.label}
+    </button>`).join("");
+
+  window.selecHumeur = (id, el) => {
+    document.querySelectorAll(".humeur-btn").forEach(b => b.classList.remove("selec"));
+    el.classList.add("selec");
+    humeurSelectee = HUMEURS.find(h => h.id === id);
+  };
+
+  window.afficherOnglet = (onglet) => {
+    document.getElementById("panneau-choisir").style.display = onglet === "choisir" ? "block" : "none";
+    document.getElementById("panneau-histo").style.display   = onglet === "histo"   ? "block" : "none";
+    document.querySelectorAll(".tabs:first-of-type .tab").forEach((t, i) => {
+      t.classList.toggle("actif", (i === 0 && onglet === "choisir") || (i === 1 && onglet === "histo"));
+    });
+  };
+
+  window.posterHumeur = async () => {
+    const msgEl = document.getElementById("msg-humeur");
+    if (!humeurSelectee) { msgEl.innerHTML = `<div class="msg msg-err">Choisis une humeur d'abord.</div>`; return; }
+    const note = document.getElementById("note-humeur").value.trim();
+    try {
+      await ajouterItem(session.code, "jeu_humeur", {
+        humeurId: humeurSelectee.id,
+        emoji:    humeurSelectee.emoji,
+        label:    humeurSelectee.label,
+        note,
+        auteur:   session.role,
+        horodatage: Date.now()
+      });
+      document.getElementById("note-humeur").value = "";
+      document.querySelectorAll(".humeur-btn").forEach(b => b.classList.remove("selec"));
+      humeurSelectee = null;
+      msgEl.innerHTML = `<div class="msg msg-ok">Humeur partagée ! ✓</div>`;
+      setTimeout(() => msgEl.innerHTML = "", 2500);
+    } catch(e) {
+      msgEl.innerHTML = `<div class="msg msg-err">Erreur : ${e.message}</div>`;
+    }
+  };
+
+  function tempsDepuis(ts) {
+    const diff = Date.now() - ts;
+    const min  = Math.floor(diff / 60000);
+    const h    = Math.floor(diff / 3600000);
+    const j    = Math.floor(diff / 86400000);
+    if (min < 1)  return "À l'instant";
+    if (min < 60) return `Il y a ${min} min`;
+    if (h < 24)   return `Il y a ${h}h`;
+    return `Il y a ${j} jour${j > 1 ? "s" : ""}`;
+  }
+
+  window.filtrerHisto = (filtre, btn) => {
+    filtreCourant = filtre;
+    document.querySelectorAll("#panneau-histo .tabs .tab").forEach(t => t.classList.remove("actif"));
+    btn.classList.add("actif");
+    afficherHisto();
+  };
+
+  function afficherHisto() {
+    const liste = document.getElementById("liste-histo");
+    let items = [...toutLHisto].sort((a, b) => (b.horodatage || 0) - (a.horodatage || 0));
+    if (filtreCourant === "moi")   items = items.filter(h => h.auteur === session.role);
+    if (filtreCourant === "autre") items = items.filter(h => h.auteur !== session.role);
+    if (items.length === 0) {
+      liste.innerHTML = `<div class="vide">Aucune humeur ici pour l'instant.</div>`;
+      return;
+    }
+    liste.innerHTML = items.map(h => {
+      const estMoi       = h.auteur === session.role;
+      const prenomAuteur = h.auteur === "joueurA" ? prenoms.A : prenoms.B;
+      return `
+        <div class="histo-item">
+          <div class="histo-emoji">${h.emoji}</div>
+          <div class="histo-corps">
+            <div class="histo-label">${h.label}</div>
+            ${h.note ? `<div class="histo-note">${h.note}</div>` : ""}
+            <div class="histo-meta">
+              <span class="histo-badge ${estMoi ? "badge-moi" : "badge-autre"}">${prenomAuteur}</span>
+              · ${tempsDepuis(h.horodatage || 0)}
+            </div>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  ecouterJeu(session.code, "jeu_humeur", (items) => {
+    toutLHisto = items;
+
+    // Dernière humeur de chaque joueur pour l'affichage en haut
+    const derniereA = [...items].filter(h => h.auteur === "joueurA").sort((a, b) => (b.horodatage||0) - (a.horodatage||0))[0];
+    const derniereB = [...items].filter(h => h.auteur === "joueurB").sort((a, b) => (b.horodatage||0) - (a.horodatage||0))[0];
+
+    const derniereMoi   = session.role === "joueurA" ? derniereA : derniereB;
+    const derniereAutre = session.role === "joueurA" ? derniereB : derniereA;
+
+    if (derniereMoi) {
+      document.getElementById("emoji-moi").textContent  = derniereMoi.emoji;
+      document.getElementById("label-moi").textContent  = derniereMoi.label;
+      document.getElementById("depuis-moi").textContent = tempsDepuis(derniereMoi.horodatage || 0);
+    }
+    if (derniereAutre) {
+      document.getElementById("emoji-autre").textContent  = derniereAutre.emoji;
+      document.getElementById("label-autre").textContent  = derniereAutre.label;
+      document.getElementById("depuis-autre").textContent = tempsDepuis(derniereAutre.horodatage || 0);
+    }
+
+    afficherHisto();
+  });
+</script>
+</body>
+</html>
