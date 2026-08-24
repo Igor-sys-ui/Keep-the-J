@@ -21,14 +21,14 @@
     .jeu-card.bereal     { border-color: #ff6b9d; }
     .jeu-card.concours   { border-color: #b5a0e8; }
     .jeu-card.carte      { border-color: #6bbf8e; }
+    .jeu-card.profil     { border-color: #aaa; }
+    .jeu-card.escape     { border-color: #aaa; }
     .jeu-card.bientot { opacity: 0.5; cursor: default; pointer-events: none; }
     .jeu-card .bientot-badge { font-size: 0.7rem; background: #eee; color: #999; padding: 2px 8px; border-radius: 20px; }
     .btn-deco { background: none; border: none; color: var(--gris); font-size: 1.3rem; cursor: pointer; padding: 4px; }
     .statut-partenaire { font-size: 0.82rem; color: var(--gris); text-align: center; margin-bottom: 16px; }
     .statut-partenaire .online  { color: var(--vert); font-weight: 700; }
     .statut-partenaire .attente { color: #f4a261; font-weight: 700; }
-
-    /* Bulles */
     .jeu-card { position: relative; }
     .notif-bulle {
       position: absolute; top: -8px; right: -8px;
@@ -44,32 +44,33 @@
       0%,100% { transform: scale(1); }
       50%      { transform: scale(1.15); }
     }
-
-    /* Bandeau profil en bas */
-    .profil-bandeau {
-      background: var(--blanc);
-      border-radius: var(--rayon);
-      box-shadow: var(--ombre);
-      padding: 14px 16px;
-      margin-top: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      text-decoration: none;
-      color: var(--noir);
-      border: 1px solid #eee;
-      transition: box-shadow 0.15s;
+    /* Bandeau humeur */
+    .humeur-bandeau {
+      background: var(--blanc); border-radius: var(--rayon);
+      box-shadow: var(--ombre); padding: 12px 16px; margin-bottom: 14px;
+      display: flex; align-items: center; justify-content: space-between;
+      text-decoration: none; color: var(--noir); border: 1px solid #eee;
     }
-    .profil-bandeau:hover { box-shadow: 0 6px 24px rgba(26,26,46,0.14); }
-    .profil-bandeau .pb-gauche { display: flex; align-items: center; gap: 12px; }
-    .profil-bandeau .pb-avatar { font-size: 1.6rem; }
-    .profil-bandeau .pb-texte .pb-nom { font-weight: 700; font-size: 0.95rem; }
-    .profil-bandeau .pb-texte .pb-sub { font-size: 0.78rem; color: var(--gris); }
-    .profil-bandeau .pb-scores { display: flex; gap: 14px; align-items: center; }
-    .profil-bandeau .pb-score { text-align: center; }
-    .profil-bandeau .pb-score .val { font-size: 1.2rem; font-weight: 700; color: var(--rose-fonce); }
-    .profil-bandeau .pb-score .lbl { font-size: 0.68rem; color: var(--gris); }
-    .profil-bandeau .pb-fleche { color: #ccc; font-size: 1.1rem; }
+    .hb-titre { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gris); }
+    .hb-duo { display: flex; gap: 16px; align-items: center; }
+    .hb-joueur { display: flex; align-items: center; gap: 6px; }
+    .hb-emoji { font-size: 1.4rem; }
+    .hb-nom { font-size: 0.72rem; color: var(--gris); }
+    /* Bandeau profil */
+    .profil-bandeau {
+      background: var(--blanc); border-radius: var(--rayon);
+      box-shadow: var(--ombre); padding: 14px 16px; margin-top: 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      text-decoration: none; color: var(--noir); border: 1px solid #eee;
+    }
+    .pb-gauche { display: flex; align-items: center; gap: 12px; }
+    .pb-avatar { font-size: 1.6rem; }
+    .pb-nom { font-weight: 700; font-size: 0.95rem; }
+    .pb-sub { font-size: 0.78rem; color: var(--gris); }
+    .pb-scores { display: flex; gap: 14px; align-items: center; }
+    .pb-score { text-align: center; }
+    .pb-score .val { font-size: 1.2rem; font-weight: 700; color: var(--rose-fonce); }
+    .pb-score .lbl { font-size: 0.68rem; color: var(--gris); }
   </style>
 </head>
 <body>
@@ -94,6 +95,23 @@
     </div>
 
     <div class="statut-partenaire" id="statut-partenaire"></div>
+
+    <!-- Bandeau humeur -->
+    <a href="jeux/humeur.html" class="humeur-bandeau">
+      <div class="hb-titre">🌤️ Météo de l'humeur</div>
+      <div class="hb-duo">
+        <div class="hb-joueur">
+          <span class="hb-emoji" id="hub-emoji-moi">❓</span>
+          <span class="hb-nom"  id="hub-nom-moi">Moi</span>
+        </div>
+        <span style="color:#ddd;">·</span>
+        <div class="hb-joueur">
+          <span class="hb-emoji" id="hub-emoji-autre">❓</span>
+          <span class="hb-nom"  id="hub-nom-autre">Autre</span>
+        </div>
+      </div>
+      <span style="color:#ccc;">›</span>
+    </a>
 
     <div class="section-titre">🎮 Les jeux</div>
     <div class="jeux-grid">
@@ -165,12 +183,12 @@
     <hr class="sep">
 
     <!-- Bandeau profil -->
-    <a href="jeux/profil.html" class="profil-bandeau" id="lien-profil">
+    <a href="jeux/profil.html" class="profil-bandeau">
       <div class="pb-gauche">
         <div class="pb-avatar">👤</div>
-        <div class="pb-texte">
-          <div class="pb-nom" id="pb-nom">Profils & Stats</div>
-          <div class="pb-sub">Scores, statistiques, comparaison</div>
+        <div>
+          <div class="pb-nom">Profils & Stats</div>
+          <div class="pb-sub">Scores, statistiques, favoris</div>
         </div>
       </div>
       <div class="pb-scores">
@@ -184,7 +202,7 @@
           <div class="lbl" id="pb-label-autre">Autre</div>
         </div>
       </div>
-      <div class="pb-fleche">›</div>
+      <span style="color:#ccc;">›</span>
     </a>
 
     <hr class="sep">
@@ -199,7 +217,6 @@
 
   const session = getSession();
   if (!session.code) { window.location.href = "index.html"; }
-
   await connecterFirebase();
 
   // ===== SALON =====
@@ -213,20 +230,19 @@
     document.getElementById("nom-b").textContent = data.joueurB ? prenomB : "En attente…";
     document.getElementById("code-affiche").textContent = session.code;
 
-    // Bandeau profil — prénoms et scores
-    const estA = session.role === "joueurA";
+    const estA        = session.role === "joueurA";
     const prenomMoi   = estA ? prenomA : prenomB;
     const prenomAutre = estA ? prenomB : prenomA;
+    document.getElementById("hub-nom-moi").textContent   = prenomMoi;
+    document.getElementById("hub-nom-autre").textContent = prenomAutre;
     document.getElementById("pb-label-moi").textContent   = prenomMoi;
     document.getElementById("pb-label-autre").textContent = prenomAutre;
 
     const sc = data.scores ?? {};
-    const totalMoi   = (sc.points?.[estA?"A":"B"] || 0)
-                     + (sc.pictionary?.[estA?"A":"B"] || 0)
-                     + (sc.concours?.[estA?"A":"B"] || 0);
-    const totalAutre = (sc.points?.[estA?"B":"A"] || 0)
-                     + (sc.pictionary?.[estA?"B":"A"] || 0)
-                     + (sc.concours?.[estA?"B":"A"] || 0);
+    const cleM = estA ? "A" : "B";
+    const cleA = estA ? "B" : "A";
+    const totalMoi   = (sc.points?.[cleM]||0) + (sc.pictionary?.[cleM]||0) + (sc.concours?.[cleM]||0);
+    const totalAutre = (sc.points?.[cleA]||0) + (sc.pictionary?.[cleA]||0) + (sc.concours?.[cleA]||0);
     document.getElementById("pb-score-moi").textContent   = totalMoi;
     document.getElementById("pb-score-autre").textContent = totalAutre;
 
@@ -239,12 +255,8 @@
   });
 
   // ===== NOTIFICATIONS =====
-  // On stocke les IDs vus PAR JEU dans localStorage.
-  // Au clic sur une carte, on copie tous les IDs actuellement connus
-  // → quand on revient, ces IDs sont "vus" et la bulle disparaît.
-
   const comptesParJeu = {};
-  const idsParJeu = {}; // { "points": Set([id1, id2, ...]) }
+  const idsParJeu = {};
 
   function majBadgeIcone() {
     const total = Object.values(comptesParJeu).reduce((a, b) => a + b, 0);
@@ -263,78 +275,69 @@
     majBadgeIcone();
   }
 
-  // IDs déjà vus pour ce jeu (stockés dans localStorage)
   function getIdsVus(jeu) {
     try { return new Set(JSON.parse(localStorage.getItem("ktj_vu_" + jeu) || "[]")); }
     catch { return new Set(); }
   }
 
-  // Marquer tous les IDs connus d'un jeu comme vus
   function marquerTousVus(jeu) {
     const ids = idsParJeu[jeu] ?? new Set();
     localStorage.setItem("ktj_vu_" + jeu, JSON.stringify([...ids]));
     afficherBulle(jeu, 0);
   }
 
+  if ("clearAppBadge" in navigator) navigator.clearAppBadge();
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) majBadgeIcone();
   });
 
-  // Effacer badge quand on ouvre l'app
-  if ("clearAppBadge" in navigator) navigator.clearAppBadge();
-
   const role = session.role;
 
-  // Défis : missions de l'autre non validées
+  // Défis
   ecouterJeu(session.code, "jeu_points", (items) => {
     idsParJeu["points"] = new Set(items.map(m => m.id));
     const vus = getIdsVus("points");
-    const n = items.filter(m => m.auteur !== role && !m.validee && !vus.has(m.id)).length;
-    afficherBulle("points", n);
+    afficherBulle("points", items.filter(m => m.auteur !== role && !m.validee && !vus.has(m.id)).length);
   });
 
-  // Boîte Secrète : boîtes reçues non ouvertes
+  // Boîte Secrète
   ecouterJeu(session.code, "jeu_boite", (items) => {
     idsParJeu["boite"] = new Set(items.map(b => b.id));
     const vus = getIdsVus("boite");
-    const n = items.filter(b => b.auteur !== role && !b.ouverte && !vus.has(b.id)).length;
-    afficherBulle("boite", n);
+    afficherBulle("boite", items.filter(b => b.auteur !== role && !b.ouverte && !vus.has(b.id)).length);
   });
 
-  // L'Artiste : dessins reçus sans réponse
+  // L'Artiste
   ecouterJeu(session.code, "jeu_pictionary", (items) => {
     idsParJeu["pictionary"] = new Set(items.map(d => d.id));
     const vus = getIdsVus("pictionary");
-    const n = items.filter(d =>
+    afficherBulle("pictionary", items.filter(d =>
       d.auteur !== role && d.valide === null && !d.reponse && !vus.has(d.id)
-    ).length;
-    afficherBulle("pictionary", n);
+    ).length);
   });
 
-  // 36 Questions : sans ma réponse OU réponse de l'autre dispo
+  // 36 Questions
   ecouterJeu(session.code, "jeu_questions", (items) => {
     idsParJeu["questions"] = new Set(items.map(q => q.id));
     const vus    = getIdsVus("questions");
     const cleMoi   = role === "joueurA" ? "reponseA" : "reponseB";
     const cleAutre = role === "joueurA" ? "reponseB" : "reponseA";
-    const n = items.filter(q => {
+    afficherBulle("questions", items.filter(q => {
       if (vus.has(q.id)) return false;
       if (!q[cleMoi]) return true;
       if (q[cleAutre]) return true;
       return false;
-    }).length;
-    afficherBulle("questions", n);
+    }).length);
   });
 
-  // Calendrier : nouvelles dates de l'autre
+  // Calendrier
   ecouterJeu(session.code, "jeu_calendrier", (items) => {
     idsParJeu["calendrier"] = new Set(items.map(e => e.id));
     const vus = getIdsVus("calendrier");
-    const n = items.filter(e => e.auteur !== role && !vus.has(e.id)).length;
-    afficherBulle("calendrier", n);
+    afficherBulle("calendrier", items.filter(e => e.auteur !== role && !vus.has(e.id)).length);
   });
 
-  // Be Real : moment actif où je n'ai pas posté
+  // Be Real
   ecouterJeu(session.code, "jeu_bereal", (items) => {
     idsParJeu["bereal"] = new Set(items.map(m => m.id));
     const DUREE_MS = 2 * 60 * 60 * 1000;
@@ -344,34 +347,41 @@
     afficherBulle("bereal", maPhoto ? 0 : 1);
   });
 
-  // Concours Photo : photo à poster ou vote en attente
+  // Concours Photo
   ecouterJeu(session.code, "jeu_concours", (items) => {
     idsParJeu["concours"] = new Set(items.map(c => c.id));
-    const vus = getIdsVus("concours");
+    const vus        = getIdsVus("concours");
     const maPhotoCle = role === "joueurA" ? "photoA" : "photoB";
     const monVoteCle = role === "joueurA" ? "voteA"  : "voteB";
-    const n = items.filter(c => {
+    afficherBulle("concours", items.filter(c => {
       if (c.termine || vus.has(c.id)) return false;
       if (!c[maPhotoCle]) return true;
       if (c.photoA && c.photoB && !c[monVoteCle]) return true;
       return false;
-    }).length;
-    afficherBulle("concours", n);
+    }).length);
   });
 
-  // Notre Carte : nouveaux points de l'autre
+  // Notre Carte
   ecouterJeu(session.code, "jeu_carte", (items) => {
     idsParJeu["carte"] = new Set(items.map(p => p.id));
     const vus = getIdsVus("carte");
-    const n = items.filter(p => p.auteur !== role && !vus.has(p.id)).length;
-    afficherBulle("carte", n);
+    afficherBulle("carte", items.filter(p => p.auteur !== role && !vus.has(p.id)).length);
   });
 
-  // Au clic sur une carte : marquer tous les IDs connus comme vus
+  // Humeur dans le bandeau
+  ecouterJeu(session.code, "jeu_humeur", (items) => {
+    const derniereMoi   = [...items].filter(h => h.auteur === role)
+                          .sort((a,b) => (b.horodatage||0)-(a.horodatage||0))[0];
+    const derniereAutre = [...items].filter(h => h.auteur !== role)
+                          .sort((a,b) => (b.horodatage||0)-(a.horodatage||0))[0];
+    if (derniereMoi)   document.getElementById("hub-emoji-moi").textContent   = derniereMoi.emoji;
+    if (derniereAutre) document.getElementById("hub-emoji-autre").textContent = derniereAutre.emoji;
+  });
+
+  // Marquer vus au clic
   document.querySelectorAll(".jeu-card[id]").forEach(card => {
     card.addEventListener("click", () => {
-      const jeu = card.id.replace("card-", "");
-      marquerTousVus(jeu);
+      marquerTousVus(card.id.replace("card-", ""));
     });
   });
 
