@@ -6,7 +6,6 @@
   <title>Profils — Keep The J</title>
   <link rel="stylesheet" href="../style.css">
   <style>
-    /* Humeur en haut */
     .humeurs-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
     .humeur-card { background: var(--blanc); border-radius: var(--rayon); padding: 16px 12px; box-shadow: var(--ombre); text-align: center; text-decoration: none; transition: transform 0.15s; }
     .humeur-card:hover { transform: translateY(-2px); }
@@ -16,17 +15,14 @@
     .humeur-nom  { font-weight: 700; font-size: 0.9rem; color: var(--noir); }
     .humeur-lbl  { font-size: 0.8rem; color: var(--gris); margin-top: 2px; }
     .humeur-hint { font-size: 0.7rem; color: #bbb; margin-top: 4px; }
-
-    /* Profil scores */
     .profils-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
     .profil-card { background: var(--blanc); border-radius: var(--rayon); padding: 16px; box-shadow: var(--ombre); text-align: center; }
     .profil-card.moi   { border-top: 4px solid var(--rose-fonce); }
     .profil-card.autre { border-top: 4px solid #2a6fc4; }
-    .profil-nom { font-weight: 700; font-size: 1rem; margin-bottom: 2px; }
+    .profil-nom  { font-weight: 700; font-size: 1rem; margin-bottom: 2px; }
     .profil-role { font-size: 0.72rem; color: var(--gris); margin-bottom: 10px; }
     .score-total { font-size: 2rem; font-weight: 700; color: var(--rose-fonce); }
     .score-label { font-size: 0.72rem; color: var(--gris); }
-
     .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; margin-top: 4px; }
     .compare-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
     .compare-table th { font-size: 0.78rem; color: var(--gris); font-weight: 600; padding: 8px 6px; text-align: center; border-bottom: 2px solid #eee; }
@@ -37,34 +33,24 @@
     .score-cell.gagne { color: var(--vert); }
     .score-cell.perd  { color: var(--rouge); }
     .score-cell.egal  { color: var(--gris); }
-
-    /* Bouton reset par jeu */
     .reset-btn { font-size: 0.72rem; color: #bbb; background: none; border: 1px solid #eee; border-radius: 20px; padding: 2px 8px; cursor: pointer; }
     .reset-btn:hover { color: var(--rouge); border-color: var(--rouge); }
-
+    .reset-demande { background: #fff8e1; border-radius: 10px; padding: 10px 14px; font-size: 0.82rem; color: #7a6000; margin-bottom: 12px; }
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
     .stat-card { background: var(--blanc); border-radius: var(--rayon); padding: 14px; box-shadow: var(--ombre); text-align: center; }
     .stat-val  { font-size: 1.8rem; font-weight: 700; color: var(--rose-fonce); line-height: 1; }
     .stat-lbl  { font-size: 0.72rem; color: var(--gris); margin-top: 4px; }
-
     .progress-wrap { margin-bottom: 20px; }
     .progress-label { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px; }
     .progress-label .nom-a { color: var(--rose-fonce); font-weight: 700; }
     .progress-label .nom-b { color: #2a6fc4; font-weight: 700; }
     .progress-bar { height: 12px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
     .progress-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--rose-fonce), var(--rose)); transition: width 0.6s ease; }
-
-    /* Favoris */
     .favori-card { background: var(--blanc); border-radius: var(--rayon); padding: 14px; box-shadow: var(--ombre); margin-bottom: 10px; border-left: 4px solid #f9c74f; }
     .favori-jeu  { font-size: 0.72rem; color: var(--gris); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
     .favori-texte { font-size: 0.9rem; font-weight: 600; }
     .favori-meta  { font-size: 0.72rem; color: #bbb; margin-top: 4px; }
     .vide { text-align: center; padding: 24px 0; color: #bbb; font-size: 0.9rem; }
-
-    /* Reset global */
-    .reset-zone { background: #fff5f5; border-radius: var(--rayon); padding: 16px; border: 1px solid #fde8e8; margin-bottom: 16px; }
-    .reset-zone p { font-size: 0.85rem; color: var(--gris); margin-bottom: 12px; }
-    .reset-en-attente { background: #fff8e1; border-radius: 10px; padding: 10px 14px; font-size: 0.85rem; color: #7a6000; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -80,7 +66,7 @@
 
   <div id="contenu" style="display:none;">
 
-    <!-- Météo de l'humeur en haut -->
+    <!-- Météo de l'humeur -->
     <div class="section-titre">🌤️ Météo de l'humeur</div>
     <div class="humeurs-duo">
       <a href="humeur.html" class="humeur-card moi">
@@ -101,15 +87,15 @@
     <div class="section-titre">🏆 Scores</div>
     <div class="profils-duo">
       <div class="profil-card moi">
-        <div class="profil-nom"   id="nom-moi">—</div>
-        <div class="profil-role"  id="role-moi">—</div>
-        <div class="score-total"  id="score-total-moi">0</div>
+        <div class="profil-nom"  id="nom-moi">—</div>
+        <div class="profil-role" id="role-moi">—</div>
+        <div class="score-total" id="score-total-moi">0</div>
         <div class="score-label">pts total</div>
       </div>
       <div class="profil-card autre">
-        <div class="profil-nom"   id="nom-autre">—</div>
-        <div class="profil-role"  id="role-autre">—</div>
-        <div class="score-total"  id="score-total-autre">0</div>
+        <div class="profil-nom"  id="nom-autre">—</div>
+        <div class="profil-role" id="role-autre">—</div>
+        <div class="score-total" id="score-total-autre">0</div>
         <div class="score-label">pts total</div>
       </div>
     </div>
@@ -126,26 +112,19 @@
     </div>
 
     <div class="section-titre">🎮 Scores par jeu</div>
+    <!-- Zone affichage demandes de reset en attente -->
+    <div id="zone-resets"></div>
     <table class="compare-table">
       <thead>
         <tr>
           <th class="jeu-col">Jeu</th>
           <th id="th-moi">Moi</th>
           <th id="th-autre">Autre</th>
-          <th>Reset</th>
+          <th>↺</th>
         </tr>
       </thead>
       <tbody id="tbody-scores"></tbody>
     </table>
-
-    <!-- Reset global -->
-    <div class="reset-zone">
-      <p>⚠️ Remettre tous les scores à zéro — les deux joueurs doivent confirmer.</p>
-      <div id="statut-reset"></div>
-      <button class="btn btn-danger" onclick="demanderReset()" id="btn-reset" style="padding:10px;">
-        🗑 Demander une remise à zéro globale
-      </button>
-    </div>
 
     <!-- Stats -->
     <div class="section-titre">📊 Mes statistiques</div>
@@ -160,9 +139,9 @@
 
 <script type="module">
   import { getSession, connecterFirebase, ecouterSalon } from "../auth.js";
-  import { lireSalon, lireJeuUneFois, ecouterJeu, modifierItem } from "../db.js";
+  import { lireSalon, lireJeuUneFois, ecouterJeu } from "../db.js";
   import { db } from "../firebase-config.js";
-  import { doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+  import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
   const session = getSession();
   if (!session.code) { window.location.href = "../index.html"; }
@@ -180,14 +159,14 @@
     const cleScore    = estA ? "A" : "B";
     const cleAutre2   = estA ? "B" : "A";
 
-    document.getElementById("nom-moi").textContent    = prenomMoi;
-    document.getElementById("nom-autre").textContent  = prenomAutre;
-    document.getElementById("role-moi").textContent   = estA ? "Joueur A" : "Joueur B";
-    document.getElementById("role-autre").textContent = estA ? "Joueur B" : "Joueur A";
-    document.getElementById("th-moi").textContent   = prenomMoi;
-    document.getElementById("th-autre").textContent = prenomAutre;
-    document.getElementById("nom-humeur-moi").textContent   = prenomMoi;
-    document.getElementById("nom-humeur-autre").textContent = prenomAutre;
+    document.getElementById("nom-moi").textContent         = prenomMoi;
+    document.getElementById("nom-autre").textContent       = prenomAutre;
+    document.getElementById("role-moi").textContent        = estA ? "Joueur A" : "Joueur B";
+    document.getElementById("role-autre").textContent      = estA ? "Joueur B" : "Joueur A";
+    document.getElementById("th-moi").textContent          = prenomMoi;
+    document.getElementById("th-autre").textContent        = prenomAutre;
+    document.getElementById("nom-humeur-moi").textContent  = prenomMoi;
+    document.getElementById("nom-humeur-autre").textContent= prenomAutre;
 
     // ===== HUMEUR =====
     ecouterJeu(session.code, "jeu_humeur", (items) => {
@@ -196,26 +175,27 @@
       const derniereAutre = [...items].filter(h => h.auteur !== session.role)
                             .sort((a,b) => (b.horodatage||0)-(a.horodatage||0))[0];
       if (derniereMoi) {
-        document.getElementById("emoji-moi").textContent  = derniereMoi.emoji;
+        document.getElementById("emoji-moi").textContent    = derniereMoi.emoji;
         document.getElementById("lbl-humeur-moi").textContent = derniereMoi.label;
       }
       if (derniereAutre) {
-        document.getElementById("emoji-autre").textContent  = derniereAutre.emoji;
+        document.getElementById("emoji-autre").textContent    = derniereAutre.emoji;
         document.getElementById("lbl-humeur-autre").textContent = derniereAutre.label;
       }
     });
 
-    // ===== SCORES =====
+    // ===== JEUX avec scores =====
     const JEUX_SCORES = [
       { key: "points",     emoji: "🏆", nom: "Défis" },
       { key: "pictionary", emoji: "🎨", nom: "L'Artiste" },
       { key: "concours",   emoji: "🏅", nom: "Concours Photo" },
     ];
 
-    function afficherScores(sc) {
+    function afficherScores(sc, resetsDemandes) {
       let totalMoi = 0, totalAutre = 0;
       const tbody = document.getElementById("tbody-scores");
       tbody.innerHTML = "";
+
       JEUX_SCORES.forEach(j => {
         const scores     = sc[j.key] ?? { A: 0, B: 0 };
         const scoreMoi   = scores[cleScore]  || 0;
@@ -224,14 +204,20 @@
         totalAutre += scoreAutre;
         const clsMoi   = scoreMoi > scoreAutre ? "gagne" : scoreMoi < scoreAutre ? "perd" : "egal";
         const clsAutre = scoreAutre > scoreMoi ? "gagne" : scoreAutre < scoreMoi ? "perd" : "egal";
+        // Le bouton reset est désactivé si une demande est déjà en cours pour ce jeu
+        const demandeEnCours = resetsDemandes?.[j.key];
+        const btnReset = demandeEnCours
+          ? `<span style="font-size:0.7rem;color:#f4a261;">⏳</span>`
+          : `<button class="reset-btn" onclick="demanderResetJeu('${j.key}','${j.nom}')">↺</button>`;
         tbody.innerHTML += `
           <tr>
             <td class="jeu-nom">${j.emoji} ${j.nom}</td>
             <td class="score-cell ${clsMoi}">${scoreMoi}</td>
             <td class="score-cell ${clsAutre}">${scoreAutre}</td>
-            <td><button class="reset-btn" onclick="resetJeu('${j.key}','${j.nom}')">↺</button></td>
+            <td>${btnReset}</td>
           </tr>`;
       });
+
       tbody.innerHTML += `
         <tr style="border-top:2px solid #eee;font-weight:700;">
           <td class="jeu-nom">Total</td>
@@ -239,6 +225,7 @@
           <td class="score-cell ${totalAutre>totalMoi?"gagne":totalAutre<totalMoi?"perd":"egal"}">${totalAutre}</td>
           <td></td>
         </tr>`;
+
       document.getElementById("score-total-moi").textContent   = totalMoi;
       document.getElementById("score-total-autre").textContent = totalAutre;
       const grand = totalMoi + totalAutre;
@@ -246,71 +233,69 @@
       document.getElementById("progress-fill").style.width = pct + "%";
       document.getElementById("label-barre-a").textContent = `${prenomMoi} — ${totalMoi} pts`;
       document.getElementById("label-barre-b").textContent = `${prenomAutre} — ${totalAutre} pts`;
-    }
 
-    // Écouter les scores en temps réel
-    ecouterSalon(session.code, (data) => {
-      afficherScores(data.scores ?? {});
-      verifierReset(data);
-    });
-
-    // ===== RESET PAR JEU =====
-    window.resetJeu = async (key, nom) => {
-      if (!confirm(`Remettre à zéro les scores de "${nom}" ? Les deux joueurs doivent confirmer.`)) return;
-      // Même système : on demande dans Firestore
-      await updateDoc(doc(db, "salons", session.code), {
-        [`resetDemande.${key}`]: { demandePar: session.role, ts: Date.now() }
-      });
-      alert("Demande envoyée. L'autre joueur doit aussi confirmer depuis sa page Profils.");
-    };
-
-    // ===== RESET GLOBAL =====
-    window.demanderReset = async () => {
-      if (!confirm("Demander une remise à zéro de TOUS les scores ? L'autre joueur devra aussi confirmer.")) return;
-      await updateDoc(doc(db, "salons", session.code), {
-        "resetGlobal": { demandePar: session.role, ts: Date.now() }
-      });
-    };
-
-    function verifierReset(data) {
-      const reset = data.resetGlobal;
-      const statutEl = document.getElementById("statut-reset");
-      const btnEl    = document.getElementById("btn-reset");
-      if (!reset) { statutEl.innerHTML = ""; return; }
-      if (reset.demandePar === session.role) {
-        statutEl.innerHTML = `<div class="reset-en-attente">⏳ Tu as demandé la remise à zéro. En attente de confirmation de ${prenomAutre}…</div>`;
-        btnEl.style.display = "none";
-      } else {
-        // L'autre a demandé — on peut confirmer
-        statutEl.innerHTML = `
-          <div class="reset-en-attente">
-            ${prenomAutre} a demandé une remise à zéro de tous les scores.
-            <br><br>
-            <button class="btn btn-danger" onclick="confirmerReset()" style="padding:10px;">
-              ✓ Confirmer la remise à zéro
+      // Afficher les demandes de reset en attente
+      const zoneResets = document.getElementById("zone-resets");
+      if (!resetsDemandes) { zoneResets.innerHTML = ""; return; }
+      let html = "";
+      JEUX_SCORES.forEach(j => {
+        const demande = resetsDemandes[j.key];
+        if (!demande) return;
+        if (demande.demandePar === session.role) {
+          // J'ai demandé, j'attends l'autre
+          html += `<div class="reset-demande">
+            ⏳ Tu as demandé la remise à zéro de <strong>${j.nom}</strong>.<br>
+            En attente de confirmation de <strong>${prenomAutre}</strong>…
+            <br><button class="btn btn-gris" onclick="annulerResetJeu('${j.key}')"
+              style="width:auto;padding:6px 12px;font-size:0.8rem;margin-top:8px;">
+              Annuler
             </button>
-            <button class="btn btn-gris" onclick="annulerReset()" style="padding:10px;margin-top:8px;">
+          </div>`;
+        } else {
+          // L'autre a demandé, je peux confirmer
+          html += `<div class="reset-demande">
+            <strong>${prenomAutre}</strong> demande la remise à zéro de <strong>${j.nom}</strong>.
+            <br>
+            <button class="btn btn-vert" onclick="confirmerResetJeu('${j.key}')"
+              style="width:auto;padding:8px 14px;font-size:0.85rem;margin-top:8px;">
+              ✓ Confirmer
+            </button>
+            <button class="btn btn-danger" onclick="annulerResetJeu('${j.key}')"
+              style="width:auto;padding:8px 14px;font-size:0.85rem;margin-top:8px;margin-left:8px;">
               ✗ Refuser
             </button>
           </div>`;
-        btnEl.style.display = "none";
-      }
+        }
+      });
+      zoneResets.innerHTML = html;
     }
 
-    window.confirmerReset = async () => {
-      if (!confirm("Confirmer définitivement la remise à zéro de tous les scores ?")) return;
+    // ===== RESET PAR JEU =====
+    window.demanderResetJeu = async (key, nom) => {
+      if (!confirm(`Demander la remise à zéro des scores de "${nom}" ?\n${prenomAutre} devra confirmer.`)) return;
       await updateDoc(doc(db, "salons", session.code), {
-        "scores": { points: {A:0,B:0}, pictionary: {A:0,B:0}, concours: {A:0,B:0} },
-        "resetGlobal": null
+        [`resetDemande.${key}`]: { demandePar: session.role, ts: Date.now() }
       });
-      document.getElementById("btn-reset").style.display = "block";
-      alert("Scores remis à zéro !");
     };
 
-    window.annulerReset = async () => {
-      await updateDoc(doc(db, "salons", session.code), { "resetGlobal": null });
-      document.getElementById("btn-reset").style.display = "block";
+    window.confirmerResetJeu = async (key) => {
+      if (!confirm("Confirmer la remise à zéro ?")) return;
+      await updateDoc(doc(db, "salons", session.code), {
+        [`scores.${key}`]: { A: 0, B: 0 },
+        [`resetDemande.${key}`]: null
+      });
     };
+
+    window.annulerResetJeu = async (key) => {
+      await updateDoc(doc(db, "salons", session.code), {
+        [`resetDemande.${key}`]: null
+      });
+    };
+
+    // Écouter en temps réel
+    ecouterSalon(session.code, (data) => {
+      afficherScores(data.scores ?? {}, data.resetDemande ?? null);
+    });
 
     // ===== STATS =====
     const [points, dessins, questions, boites, concours] = await Promise.all([
@@ -350,28 +335,28 @@
 
     // ===== FAVORIS =====
     const NOMS_JEUX = {
-      "jeu_points": "🏆 Défis",
-      "jeu_boite": "🔒 Boîte Secrète",
-      "jeu_pictionary": "🎨 L'Artiste",
+      "jeu_points":    "🏆 Défis",
+      "jeu_boite":     "🔒 Boîte Secrète",
+      "jeu_pictionary":"🎨 L'Artiste",
       "jeu_questions": "💬 36 Questions",
-      "jeu_calendrier": "📅 Calendrier",
-      "jeu_concours": "🏅 Concours Photo",
-      "jeu_carte": "🗺️ Notre Carte"
+      "jeu_calendrier":"📅 Calendrier",
+      "jeu_concours":  "🏅 Concours Photo",
+      "jeu_carte":     "🗺️ Notre Carte"
     };
-
     const tousLesFavoris = await lireJeuUneFois(session.code, "jeu_favoris");
-    const mesFavoris = tousLesFavoris.filter(f => f.auteur === session.role);
-    const listeFavEl = document.getElementById("liste-favoris");
-
+    const mesFavoris     = tousLesFavoris.filter(f => f.auteur === session.role);
+    const listeFavEl     = document.getElementById("liste-favoris");
     if (mesFavoris.length === 0) {
-      listeFavEl.innerHTML = `<div class="vide">Aucun favori pour l'instant.<br>Appuie sur ❤️ sur n'importe quelle carte d'un jeu !</div>`;
+      listeFavEl.innerHTML = `<div class="vide">Aucun favori.<br>Appuie sur 🤍 sur n'importe quelle carte d'un jeu !</div>`;
     } else {
-      listeFavEl.innerHTML = mesFavoris.map(f => `
-        <div class="favori-card">
-          <div class="favori-jeu">${NOMS_JEUX[f.jeu] ?? f.jeu}</div>
-          <div class="favori-texte">${f.apercu ?? "Élément favori"}</div>
-          <div class="favori-meta">Mis en favori · ${new Date(f.ts || 0).toLocaleDateString("fr-FR")}</div>
-        </div>`).join("");
+      listeFavEl.innerHTML = mesFavoris
+        .sort((a,b) => (b.ts||0)-(a.ts||0))
+        .map(f => `
+          <div class="favori-card">
+            <div class="favori-jeu">${NOMS_JEUX[f.jeu] ?? f.jeu}</div>
+            <div class="favori-texte">${f.apercu ?? "Élément favori"}</div>
+            <div class="favori-meta">${new Date(f.ts||0).toLocaleDateString("fr-FR")}</div>
+          </div>`).join("");
     }
 
     document.getElementById("chargement").style.display = "none";
