@@ -94,7 +94,7 @@
 <script type="module">
   import { getSession, connecterFirebase, ecouterSalon } from "../auth.js";
   import { ecouterJeu, ajouterItem, modifierItem, supprimerItem, mettreAJourScore, lireSalon } from "../db.js";
-  import { toggleFavori } from "../favoris.js";
+  import { toggleFavori, chargerMesFavoris, estDejaFavori } from "../favoris.js";
 
   const session = getSession();
   if (!session.code) { window.location.href = "../index.html"; }
