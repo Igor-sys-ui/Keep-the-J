@@ -225,10 +225,20 @@
           </div>
           ${chronoHtml}
           <div class="mission-meta">Proposée par <strong>${prenomAuteur}</strong></div>
-          <div class="mission-actions">${actions}</div>
+          <div class="mission-actions">
+            ${actions}
+            <button onclick="toggleFavoriLocal('jeu_points','${m.id}','${m.texte.substring(0,60)}')"
+              style="background:none;border:none;font-size:1.2rem;cursor:pointer;padding:4px;"
+              id="fav-${m.id}">🤍</button>
+          </div>
         </div>`;
     }).join("");
   }
+window.toggleFavoriLocal = async (jeu, itemId, apercu) => {
+  const btn = document.getElementById("fav-" + itemId);
+  const ajoute = await toggleFavori(session.code, session.role, jeu, itemId, apercu);
+  if (btn) btn.textContent = ajoute ? "❤️" : "🤍";
+};
 </script>
 </body>
 </html>
