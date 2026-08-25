@@ -1,7 +1,3 @@
-// =============================================
-// DB.JS — Fonctions utilitaires Firestore
-// =============================================
-
 import { db } from "./firebase-config.js";
 import {
   doc, collection, addDoc, updateDoc, deleteDoc,
@@ -16,13 +12,11 @@ export function refJeu(code, nomJeu) {
   return collection(db, "salons", code, nomJeu);
 }
 
-// Lire une fois le salon
 export async function lireSalon(code) {
   const snap = await getDoc(refSalon(code));
   return snap.exists() ? snap.data() : null;
 }
 
-// Écouter en temps réel
 export function ecouterJeu(code, nomJeu, callback) {
   const ref = query(refJeu(code, nomJeu), orderBy("creeAt", "asc"));
   return onSnapshot(ref, (snap) => {
@@ -31,19 +25,17 @@ export function ecouterJeu(code, nomJeu, callback) {
   });
 }
 
-// Lire une seule fois (pour stats et favoris) — FONCTION MANQUANTE AJOUTÉE
+// Lire une seule fois — nécessaire pour favoris.js et profil.html
 export async function lireJeuUneFois(code, nomJeu) {
   try {
     const ref  = query(refJeu(code, nomJeu), orderBy("creeAt", "asc"));
     const snap = await getDocs(ref);
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch(e) {
-    // Si la collection n'existe pas encore, retourner un tableau vide
     return [];
   }
 }
 
-// Ajouter un document
 export async function ajouterItem(code, nomJeu, data) {
   const ref = await addDoc(refJeu(code, nomJeu), {
     ...data,
@@ -52,19 +44,16 @@ export async function ajouterItem(code, nomJeu, data) {
   return ref.id;
 }
 
-// Modifier un document
 export async function modifierItem(code, nomJeu, id, data) {
   const ref = doc(db, "salons", code, nomJeu, id);
   await updateDoc(ref, data);
 }
 
-// Supprimer un document
 export async function supprimerItem(code, nomJeu, id) {
   const ref = doc(db, "salons", code, nomJeu, id);
   await deleteDoc(ref);
 }
 
-// Mettre à jour les scores globaux
 export async function mettreAJourScore(code, jeu, role, delta) {
   const cle  = role === "joueurA" ? "A" : "B";
   const ref  = refSalon(code);
@@ -72,9 +61,7 @@ export async function mettreAJourScore(code, jeu, role, delta) {
   if (!snap.exists()) return;
   const scores = snap.data().scores ?? {};
   const actuel = scores[jeu]?.[cle] ?? 0;
-  await updateDoc(ref, {
-    [`scores.${jeu}.${cle}`]: actuel + delta
-  });
+  await updateDoc(ref, { [`scores.${jeu}.${cle}`]: actuel + delta });
 }
 
 export async function lireScores(code) {
