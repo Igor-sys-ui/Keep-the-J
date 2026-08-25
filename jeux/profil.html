@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="../style.css">
   <style>
     .humeurs-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
-    .humeur-card { background: var(--blanc); border-radius: var(--rayon); padding: 16px 12px; box-shadow: var(--ombre); text-align: center; text-decoration: none; transition: transform 0.15s; }
+    .humeur-card { background: var(--blanc); border-radius: var(--rayon); padding: 16px 12px; box-shadow: var(--ombre); text-align: center; text-decoration: none; transition: transform 0.15s; display: block; }
     .humeur-card:hover { transform: translateY(-2px); }
     .humeur-card.moi   { border-top: 4px solid var(--rose-fonce); }
     .humeur-card.autre { border-top: 4px solid #2a6fc4; }
@@ -66,7 +66,6 @@
 
   <div id="contenu" style="display:none;">
 
-    <!-- Météo de l'humeur -->
     <div class="section-titre">🌤️ Météo de l'humeur</div>
     <div class="humeurs-duo">
       <a href="humeur.html" class="humeur-card moi">
@@ -83,7 +82,6 @@
       </a>
     </div>
 
-    <!-- Scores -->
     <div class="section-titre">🏆 Scores</div>
     <div class="profils-duo">
       <div class="profil-card moi">
@@ -112,7 +110,6 @@
     </div>
 
     <div class="section-titre">🎮 Scores par jeu</div>
-    <!-- Zone affichage demandes de reset en attente -->
     <div id="zone-resets"></div>
     <table class="compare-table">
       <thead>
@@ -126,11 +123,9 @@
       <tbody id="tbody-scores"></tbody>
     </table>
 
-    <!-- Stats -->
     <div class="section-titre">📊 Mes statistiques</div>
     <div class="stats-grid" id="stats-grid"></div>
 
-    <!-- Favoris -->
     <div class="section-titre">❤️ Mes favoris</div>
     <div id="liste-favoris"><div class="spinner">Chargement…</div></div>
 
@@ -138,6 +133,7 @@
 </div>
 
 <script type="module">
+  // Import complet — ecouterSalon ET ecouterJeu tous les deux présents
   import { getSession, connecterFirebase, ecouterSalon } from "../auth.js";
   import { lireSalon, lireJeuUneFois, ecouterJeu } from "../db.js";
   import { db } from "../firebase-config.js";
@@ -159,32 +155,34 @@
     const cleScore    = estA ? "A" : "B";
     const cleAutre2   = estA ? "B" : "A";
 
-    document.getElementById("nom-moi").textContent         = prenomMoi;
-    document.getElementById("nom-autre").textContent       = prenomAutre;
-    document.getElementById("role-moi").textContent        = estA ? "Joueur A" : "Joueur B";
-    document.getElementById("role-autre").textContent      = estA ? "Joueur B" : "Joueur A";
-    document.getElementById("th-moi").textContent          = prenomMoi;
-    document.getElementById("th-autre").textContent        = prenomAutre;
-    document.getElementById("nom-humeur-moi").textContent  = prenomMoi;
-    document.getElementById("nom-humeur-autre").textContent= prenomAutre;
+    document.getElementById("nom-moi").textContent          = prenomMoi;
+    document.getElementById("nom-autre").textContent        = prenomAutre;
+    document.getElementById("role-moi").textContent         = estA ? "Joueur A" : "Joueur B";
+    document.getElementById("role-autre").textContent       = estA ? "Joueur B" : "Joueur A";
+    document.getElementById("th-moi").textContent           = prenomMoi;
+    document.getElementById("th-autre").textContent         = prenomAutre;
+    document.getElementById("nom-humeur-moi").textContent   = prenomMoi;
+    document.getElementById("nom-humeur-autre").textContent = prenomAutre;
 
-    // ===== HUMEUR =====
+    // ===== HUMEUR — lecture temps réel =====
     ecouterJeu(session.code, "jeu_humeur", (items) => {
-      const derniereMoi   = [...items].filter(h => h.auteur === session.role)
-                            .sort((a,b) => (b.horodatage||0)-(a.horodatage||0))[0];
-      const derniereAutre = [...items].filter(h => h.auteur !== session.role)
-                            .sort((a,b) => (b.horodatage||0)-(a.horodatage||0))[0];
+      const derniereMoi   = [...items]
+        .filter(h => h.auteur === session.role)
+        .sort((a,b) => (b.horodatage||0) - (a.horodatage||0))[0];
+      const derniereAutre = [...items]
+        .filter(h => h.auteur !== session.role)
+        .sort((a,b) => (b.horodatage||0) - (a.horodatage||0))[0];
       if (derniereMoi) {
-        document.getElementById("emoji-moi").textContent    = derniereMoi.emoji;
-        document.getElementById("lbl-humeur-moi").textContent = derniereMoi.label;
+        document.getElementById("emoji-moi").textContent       = derniereMoi.emoji;
+        document.getElementById("lbl-humeur-moi").textContent  = derniereMoi.label;
       }
       if (derniereAutre) {
-        document.getElementById("emoji-autre").textContent    = derniereAutre.emoji;
+        document.getElementById("emoji-autre").textContent      = derniereAutre.emoji;
         document.getElementById("lbl-humeur-autre").textContent = derniereAutre.label;
       }
     });
 
-    // ===== JEUX avec scores =====
+    // ===== SCORES =====
     const JEUX_SCORES = [
       { key: "points",     emoji: "🏆", nom: "Défis" },
       { key: "pictionary", emoji: "🎨", nom: "L'Artiste" },
@@ -195,7 +193,6 @@
       let totalMoi = 0, totalAutre = 0;
       const tbody = document.getElementById("tbody-scores");
       tbody.innerHTML = "";
-
       JEUX_SCORES.forEach(j => {
         const scores     = sc[j.key] ?? { A: 0, B: 0 };
         const scoreMoi   = scores[cleScore]  || 0;
@@ -204,7 +201,6 @@
         totalAutre += scoreAutre;
         const clsMoi   = scoreMoi > scoreAutre ? "gagne" : scoreMoi < scoreAutre ? "perd" : "egal";
         const clsAutre = scoreAutre > scoreMoi ? "gagne" : scoreAutre < scoreMoi ? "perd" : "egal";
-        // Le bouton reset est désactivé si une demande est déjà en cours pour ce jeu
         const demandeEnCours = resetsDemandes?.[j.key];
         const btnReset = demandeEnCours
           ? `<span style="font-size:0.7rem;color:#f4a261;">⏳</span>`
@@ -217,7 +213,6 @@
             <td>${btnReset}</td>
           </tr>`;
       });
-
       tbody.innerHTML += `
         <tr style="border-top:2px solid #eee;font-weight:700;">
           <td class="jeu-nom">Total</td>
@@ -225,7 +220,6 @@
           <td class="score-cell ${totalAutre>totalMoi?"gagne":totalAutre<totalMoi?"perd":"egal"}">${totalAutre}</td>
           <td></td>
         </tr>`;
-
       document.getElementById("score-total-moi").textContent   = totalMoi;
       document.getElementById("score-total-autre").textContent = totalAutre;
       const grand = totalMoi + totalAutre;
@@ -234,7 +228,6 @@
       document.getElementById("label-barre-a").textContent = `${prenomMoi} — ${totalMoi} pts`;
       document.getElementById("label-barre-b").textContent = `${prenomAutre} — ${totalAutre} pts`;
 
-      // Afficher les demandes de reset en attente
       const zoneResets = document.getElementById("zone-resets");
       if (!resetsDemandes) { zoneResets.innerHTML = ""; return; }
       let html = "";
@@ -242,42 +235,31 @@
         const demande = resetsDemandes[j.key];
         if (!demande) return;
         if (demande.demandePar === session.role) {
-          // J'ai demandé, j'attends l'autre
           html += `<div class="reset-demande">
-            ⏳ Tu as demandé la remise à zéro de <strong>${j.nom}</strong>.<br>
-            En attente de confirmation de <strong>${prenomAutre}</strong>…
+            ⏳ Tu as demandé la remise à zéro de <strong>${j.nom}</strong>. En attente de <strong>${prenomAutre}</strong>…
             <br><button class="btn btn-gris" onclick="annulerResetJeu('${j.key}')"
-              style="width:auto;padding:6px 12px;font-size:0.8rem;margin-top:8px;">
-              Annuler
-            </button>
+              style="width:auto;padding:6px 12px;font-size:0.8rem;margin-top:8px;">Annuler</button>
           </div>`;
         } else {
-          // L'autre a demandé, je peux confirmer
           html += `<div class="reset-demande">
             <strong>${prenomAutre}</strong> demande la remise à zéro de <strong>${j.nom}</strong>.
             <br>
             <button class="btn btn-vert" onclick="confirmerResetJeu('${j.key}')"
-              style="width:auto;padding:8px 14px;font-size:0.85rem;margin-top:8px;">
-              ✓ Confirmer
-            </button>
+              style="width:auto;padding:8px 14px;font-size:0.85rem;margin-top:8px;">✓ Confirmer</button>
             <button class="btn btn-danger" onclick="annulerResetJeu('${j.key}')"
-              style="width:auto;padding:8px 14px;font-size:0.85rem;margin-top:8px;margin-left:8px;">
-              ✗ Refuser
-            </button>
+              style="width:auto;padding:8px 14px;font-size:0.85rem;margin-top:8px;margin-left:8px;">✗ Refuser</button>
           </div>`;
         }
       });
       zoneResets.innerHTML = html;
     }
 
-    // ===== RESET PAR JEU =====
     window.demanderResetJeu = async (key, nom) => {
-      if (!confirm(`Demander la remise à zéro des scores de "${nom}" ?\n${prenomAutre} devra confirmer.`)) return;
+      if (!confirm(`Demander la remise à zéro de "${nom}" ?\n${prenomAutre} devra confirmer.`)) return;
       await updateDoc(doc(db, "salons", session.code), {
         [`resetDemande.${key}`]: { demandePar: session.role, ts: Date.now() }
       });
     };
-
     window.confirmerResetJeu = async (key) => {
       if (!confirm("Confirmer la remise à zéro ?")) return;
       await updateDoc(doc(db, "salons", session.code), {
@@ -285,14 +267,11 @@
         [`resetDemande.${key}`]: null
       });
     };
-
     window.annulerResetJeu = async (key) => {
-      await updateDoc(doc(db, "salons", session.code), {
-        [`resetDemande.${key}`]: null
-      });
+      await updateDoc(doc(db, "salons", session.code), { [`resetDemande.${key}`]: null });
     };
 
-    // Écouter en temps réel
+    // Écouter scores en temps réel
     ecouterSalon(session.code, (data) => {
       afficherScores(data.scores ?? {}, data.resetDemande ?? null);
     });
@@ -305,43 +284,20 @@
       lireJeuUneFois(session.code, "jeu_boite"),
       lireJeuUneFois(session.code, "jeu_concours"),
     ]);
-
     const cleMoi = estA ? "reponseA" : "reponseB";
     document.getElementById("stats-grid").innerHTML = `
-      <div class="stat-card">
-        <div class="stat-val">${points.filter(m => m.validee).length}</div>
-        <div class="stat-lbl">Missions accomplies</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">${points.length}</div>
-        <div class="stat-lbl">Missions créées</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">${questions.filter(q => q[cleMoi]).length}/${questions.length}</div>
-        <div class="stat-lbl">Questions répondues</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">${dessins.filter(d => d.auteur !== session.role && d.valide === true).length}</div>
-        <div class="stat-lbl">Dessins devinés</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">${boites.filter(b => b.auteur !== session.role && b.ouverte).length}/${boites.filter(b => b.auteur !== session.role).length}</div>
-        <div class="stat-lbl">Boîtes ouvertes</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">${concours.filter(c => c.termine && c.vainqueur === cleScore).length}/${concours.filter(c => c.termine).length}</div>
-        <div class="stat-lbl">Concours gagnés</div>
-      </div>`;
+      <div class="stat-card"><div class="stat-val">${points.filter(m=>m.validee).length}</div><div class="stat-lbl">Missions accomplies</div></div>
+      <div class="stat-card"><div class="stat-val">${points.length}</div><div class="stat-lbl">Missions créées</div></div>
+      <div class="stat-card"><div class="stat-val">${questions.filter(q=>q[cleMoi]).length}/${questions.length}</div><div class="stat-lbl">Questions répondues</div></div>
+      <div class="stat-card"><div class="stat-val">${dessins.filter(d=>d.auteur!==session.role&&d.valide===true).length}</div><div class="stat-lbl">Dessins devinés</div></div>
+      <div class="stat-card"><div class="stat-val">${boites.filter(b=>b.auteur!==session.role&&b.ouverte).length}/${boites.filter(b=>b.auteur!==session.role).length}</div><div class="stat-lbl">Boîtes ouvertes</div></div>
+      <div class="stat-card"><div class="stat-val">${concours.filter(c=>c.termine&&c.vainqueur===cleScore).length}/${concours.filter(c=>c.termine).length}</div><div class="stat-lbl">Concours gagnés</div></div>`;
 
     // ===== FAVORIS =====
     const NOMS_JEUX = {
-      "jeu_points":    "🏆 Défis",
-      "jeu_boite":     "🔒 Boîte Secrète",
-      "jeu_pictionary":"🎨 L'Artiste",
-      "jeu_questions": "💬 36 Questions",
-      "jeu_calendrier":"📅 Calendrier",
-      "jeu_concours":  "🏅 Concours Photo",
-      "jeu_carte":     "🗺️ Notre Carte"
+      "jeu_points":"🏆 Défis","jeu_boite":"🔒 Boîte Secrète",
+      "jeu_pictionary":"🎨 L'Artiste","jeu_questions":"💬 36 Questions",
+      "jeu_calendrier":"📅 Calendrier","jeu_concours":"🏅 Concours Photo","jeu_carte":"🗺️ Carte"
     };
     const tousLesFavoris = await lireJeuUneFois(session.code, "jeu_favoris");
     const mesFavoris     = tousLesFavoris.filter(f => f.auteur === session.role);
