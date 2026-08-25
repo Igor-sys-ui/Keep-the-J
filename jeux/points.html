@@ -18,7 +18,7 @@
     .mission-texte { font-weight: 600; flex: 1; margin-right: 8px; }
     .mission-pts { background: #f9c74f; color: #7a5c00; font-weight: 700; font-size: 0.85rem; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
     .mission-meta { font-size: 0.8rem; color: var(--gris); margin-bottom: 10px; }
-    .mission-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mission-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .mission-actions .btn { width: auto; padding: 8px 14px; font-size: 0.85rem; }
     .filtres { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
     .filtre-btn { padding: 6px 14px; border-radius: 20px; border: 1.5px solid #ddd; background: var(--blanc); font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--gris); }
@@ -86,7 +86,6 @@
     <button class="filtre-btn actif" onclick="filtrer('toutes', this)">Toutes</button>
     <button class="filtre-btn"       onclick="filtrer('en-cours', this)">En cours</button>
     <button class="filtre-btn"       onclick="filtrer('validees', this)">Validées ✓</button>
-    <button class="filtre-btn"       onclick="filtrer('expirees', this)">Expirées ⏰</button>
   </div>
 
   <div id="liste-missions"><div class="spinner">Chargement…</div></div>
@@ -94,7 +93,7 @@
 </div>
 <script type="module">
   import { getSession, connecterFirebase, ecouterSalon } from "../auth.js";
-  import { ecouterJeu, ajouterItem, modifierItem, supprimerItem, mettreAJourScore, lireSalon, toggleFavori } from "../db.js";
+  import { ecouterJeu, ajouterItem, modifierItem, supprimerItem, mettreAJourScore, lireSalon } from "../db.js";
   import { toggleFavori } from "../favoris.js";
 
   const session = getSession();
@@ -128,8 +127,8 @@
   });
 
   window.toggleChrono = () => {
-    const actif = document.getElementById("activer-chrono").checked;
-    document.getElementById("chrono-fields").classList.toggle("visible", actif);
+    document.getElementById("chrono-fields").classList.toggle("visible",
+      document.getElementById("activer-chrono").checked);
   };
 
   window.ajouterMission = async () => {
@@ -140,9 +139,9 @@
     const avecChrono = document.getElementById("activer-chrono").checked;
     let deadlineMs = null;
     if (avecChrono) {
-      const val   = parseInt(document.getElementById("chrono-valeur").value) || 24;
-      const unite = document.getElementById("chrono-unite").value;
-      deadlineMs  = Date.now() + (unite === "heures" ? val * 3600000 : val * 86400000);
+      const val  = parseInt(document.getElementById("chrono-valeur").value) || 24;
+      const unit = document.getElementById("chrono-unite").value;
+      deadlineMs = Date.now() + (unit === "heures" ? val * 3600000 : val * 86400000);
     }
     try {
       await ajouterItem(session.code, "jeu_points", {
@@ -161,8 +160,7 @@
   window.validerMission = async (id, points, auteur) => {
     if (!confirm(`Confirmes-tu que la mission a été accomplie ? (+${points} pts)`)) return;
     await modifierItem(session.code, "jeu_points", id, { validee: true, valideeAt: new Date().toISOString() });
-    const beneficiaire = auteur === "joueurA" ? "joueurB" : "joueurA";
-    await mettreAJourScore(session.code, "points", beneficiaire, points);
+    await mettreAJourScore(session.code, "points", auteur === "joueurA" ? "joueurB" : "joueurA", points);
   };
 
   window.supprimerMission = async (id) => {
@@ -177,12 +175,18 @@
     afficherMissions();
   };
 
+  // Favori
+  window.toggleFavoriLocal = async (jeu, itemId, apercu) => {
+    const btn    = document.getElementById("fav-" + itemId);
+    const ajoute = await toggleFavori(session.code, session.role, jeu, itemId, apercu);
+    if (btn) btn.textContent = ajoute ? "❤️" : "🤍";
+  };
+
   function afficherMissions() {
     const liste = document.getElementById("liste-missions");
     let missions = [...toutesLesMissions];
-    if (filtreCourant === "en-cours")  missions = missions.filter(m => !m.validee && (!m.deadline || m.deadline > Date.now()));
-    if (filtreCourant === "validees")  missions = missions.filter(m =>  m.validee);
-    if (filtreCourant === "expirees")  missions = missions.filter(m => !m.validee && m.deadline && m.deadline <= Date.now());
+    if (filtreCourant === "en-cours") missions = missions.filter(m => !m.validee);
+    if (filtreCourant === "validees") missions = missions.filter(m =>  m.validee);
     if (missions.length === 0) {
       liste.innerHTML = `<div class="vide">Aucune mission ici.<br>Sois le premier à en proposer une ! 🎯</div>`;
       return;
@@ -212,9 +216,8 @@
         } else {
           const j  = Math.floor(restant / 86400000);
           const h  = Math.floor((restant % 86400000) / 3600000);
-          const mn = Math.floor((restant % 3600000) / 60000);
-          const txt = j > 0 ? `${j}j ${h}h` : h > 0 ? `${h}h ${mn}min` : `${mn} min`;
-          chronoHtml = `<div class="chrono-badge">⏱ ${txt} restant</div>`;
+          const mn = Math.floor((restant % 3600000)  / 60000);
+          chronoHtml = `<div class="chrono-badge">⏱ ${j>0?`${j}j ${h}h`:h>0?`${h}h ${mn}min`:`${mn} min`} restant</div>`;
         }
       }
       return `
@@ -227,18 +230,14 @@
           <div class="mission-meta">Proposée par <strong>${prenomAuteur}</strong></div>
           <div class="mission-actions">
             ${actions}
-            <button onclick="toggleFavoriLocal('jeu_points','${m.id}','${m.texte.substring(0,60)}')"
+            <button id="fav-${m.id}"
+              onclick="toggleFavoriLocal('jeu_points','${m.id}','${m.texte.replace(/'/g,"").substring(0,60)}')"
               style="background:none;border:none;font-size:1.2rem;cursor:pointer;padding:4px;"
-              id="fav-${m.id}">🤍</button>
+              title="Favori">🤍</button>
           </div>
         </div>`;
     }).join("");
   }
-window.toggleFavoriLocal = async (jeu, itemId, apercu) => {
-  const btn = document.getElementById("fav-" + itemId);
-  const ajoute = await toggleFavori(session.code, session.role, jeu, itemId, apercu);
-  if (btn) btn.textContent = ajoute ? "❤️" : "🤍";
-};
 </script>
 </body>
 </html>
