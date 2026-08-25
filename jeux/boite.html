@@ -12,12 +12,12 @@
     .type-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid #ddd; background: var(--blanc); font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--gris); transition: all 0.2s; }
     .type-btn.actif { border-color: var(--rose-fonce); color: var(--rose-fonce); background: var(--rose-clair); }
     .boite-card { background: var(--blanc); border-radius: var(--rayon); padding: 18px; box-shadow: var(--ombre); margin-bottom: 14px; border-left: 4px solid var(--rose); }
-    .boite-card.mienne { border-left-color: var(--rose-fonce); }
+    .boite-card.mienne     { border-left-color: var(--rose-fonce); }
     .boite-card.partenaire { border-left-color: #2a6fc4; }
     .boite-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .boite-de { font-size: 0.82rem; color: var(--gris); }
     .boite-statut { font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
-    .statut-ferme { background: #fde8e8; color: #a32020; }
+    .statut-ferme  { background: #fde8e8; color: #a32020; }
     .statut-ouvert { background: #d4f4e2; color: #1a6b3c; }
     .condition-box { background: var(--gris-clair); border-radius: 8px; padding: 12px; margin-bottom: 12px; font-size: 0.88rem; }
     .condition-box .label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gris); margin-bottom: 4px; }
@@ -25,7 +25,7 @@
     .contenu-revele.visible { display: block; }
     .contenu-revele img { width: 100%; border-radius: 8px; margin-top: 8px; display: block; }
     .cadenas { text-align: center; font-size: 2rem; padding: 8px 0; }
-    .boite-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .boite-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .boite-actions .btn { width: auto; padding: 8px 14px; font-size: 0.85rem; }
     .vide { text-align: center; padding: 32px 0; color: #bbb; font-size: 0.9rem; }
     .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; margin-top: 4px; }
@@ -54,7 +54,7 @@
     <label>Type de contenu</label>
     <div class="type-toggle">
       <button class="type-btn actif" id="btn-texte" onclick="setType('texte')">💬 Message</button>
-      <button class="type-btn" id="btn-photo" onclick="setType('photo')">📷 Photo</button>
+      <button class="type-btn"       id="btn-photo" onclick="setType('photo')">📷 Photo</button>
     </div>
     <div id="zone-texte">
       <label for="contenu-secret">Ton message secret</label>
@@ -81,12 +81,13 @@
 <script type="module">
   import { getSession, connecterFirebase } from "../auth.js";
   import { ecouterJeu, ajouterItem, modifierItem, supprimerItem, lireSalon } from "../db.js";
+  import { toggleFavori } from "../favoris.js";
 
   const session = getSession();
   if (!session.code) { window.location.href = "../index.html"; }
   await connecterFirebase();
 
-  let prenoms = { A: "Joueur A", B: "Joueur B" };
+  let prenoms     = { A: "Joueur A", B: "Joueur B" };
   let typeCourant = "texte";
   let photoBase64 = null;
 
@@ -116,17 +117,16 @@
         const canvas = document.createElement("canvas");
         canvas.width  = img.width  * ratio;
         canvas.height = img.height * ratio;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
         photoBase64 = canvas.toDataURL("image/jpeg", 0.7);
         const apercuEl = document.getElementById("apercu-photo");
         apercuEl.src = photoBase64;
         apercuEl.classList.add("visible");
         const tailleKo = Math.round(photoBase64.length * 0.75 / 1024);
-        const infoEl = document.getElementById("info-taille");
+        const infoEl   = document.getElementById("info-taille");
         infoEl.textContent = `Photo compressée : ~${tailleKo} Ko`;
         infoEl.style.color = tailleKo > 900 ? "var(--rouge)" : "var(--gris)";
-        if (tailleKo > 900) infoEl.textContent += " ⚠️ Trop lourde, essaie une photo moins grande.";
+        if (tailleKo > 900) infoEl.textContent += " ⚠️ Trop lourde.";
       };
       img.src = e.target.result;
     };
@@ -135,7 +135,7 @@
 
   window.creerBoite = async () => {
     const condition = document.getElementById("condition-secret").value.trim();
-    const msgEl = document.getElementById("msg-form-boite");
+    const msgEl     = document.getElementById("msg-form-boite");
     if (!condition) { msgEl.innerHTML = `<div class="msg msg-err">Définis une condition à remplir.</div>`; return; }
     let contenu = "";
     if (typeCourant === "texte") {
@@ -144,7 +144,7 @@
     } else {
       if (!photoBase64) { msgEl.innerHTML = `<div class="msg msg-err">Choisis une photo d'abord.</div>`; return; }
       const tailleKo = Math.round(photoBase64.length * 0.75 / 1024);
-      if (tailleKo > 900) { msgEl.innerHTML = `<div class="msg msg-err">Photo trop lourde. Choisis-en une autre.</div>`; return; }
+      if (tailleKo > 900) { msgEl.innerHTML = `<div class="msg msg-err">Photo trop lourde.</div>`; return; }
       contenu = photoBase64;
     }
     try {
@@ -153,7 +153,7 @@
         type: typeCourant, contenu, condition,
         auteur: session.role, ouverte: false
       });
-      document.getElementById("contenu-secret").value = "";
+      document.getElementById("contenu-secret").value   = "";
       document.getElementById("condition-secret").value = "";
       document.getElementById("apercu-photo").classList.remove("visible");
       document.getElementById("info-taille").textContent = "";
@@ -162,9 +162,7 @@
       setType("texte");
       msgEl.innerHTML = `<div class="msg msg-ok">Boîte envoyée ! ✓</div>`;
       setTimeout(() => msgEl.innerHTML = "", 2500);
-    } catch(e) {
-      msgEl.innerHTML = `<div class="msg msg-err">Erreur : ${e.message}</div>`;
-    }
+    } catch(e) { msgEl.innerHTML = `<div class="msg msg-err">Erreur : ${e.message}</div>`; }
   };
 
   window.validerCondition = async (id) => {
@@ -177,6 +175,12 @@
     await supprimerItem(session.code, "jeu_boite", id);
   };
 
+  window.toggleFavoriLocal = async (jeu, itemId, apercu) => {
+    const btn    = document.getElementById("fav-" + itemId);
+    const ajoute = await toggleFavori(session.code, session.role, jeu, itemId, apercu);
+    if (btn) btn.textContent = ajoute ? "❤️" : "🤍";
+  };
+
   ecouterJeu(session.code, "jeu_boite", (boites) => {
     const liste = document.getElementById("liste-boites");
     if (boites.length === 0) {
@@ -184,10 +188,10 @@
       return;
     }
     liste.innerHTML = boites.map(b => {
-      const estMienne = b.auteur === session.role;
-      const classeCard = estMienne ? "mienne" : "partenaire";
+      const estMienne    = b.auteur === session.role;
+      const classeCard   = estMienne ? "mienne" : "partenaire";
       const prenomAuteur = b.auteur === "joueurA" ? prenoms.A : prenoms.B;
-      const statutHtml = b.ouverte
+      const statutHtml   = b.ouverte
         ? `<span class="boite-statut statut-ouvert">🔓 Ouverte</span>`
         : `<span class="boite-statut statut-ferme">🔒 Fermée</span>`;
       let contenuHtml = "";
@@ -201,13 +205,15 @@
       let actions = "";
       if (!b.ouverte && estMienne) {
         actions = `
-          <button class="btn btn-vert" onclick="validerCondition('${b.id}')">✓ Valider la condition</button>
+          <button class="btn btn-vert"   onclick="validerCondition('${b.id}')">✓ Valider la condition</button>
           <button class="btn btn-danger" onclick="supprimerBoite('${b.id}')">🗑</button>`;
       } else if (!b.ouverte && !estMienne) {
         actions = `<span style="color:var(--gris);font-size:0.82rem;">En attente que ${prenomAuteur} valide…</span>`;
       } else {
-        actions = `<span style="color:var(--vert);font-size:0.85rem;font-weight:600;">✓ Révélée</span>`;
+        actions = `<span style="color:var(--vert);font-size:0.85rem;font-weight:600;">✓ Révélée</span>
+          <button class="btn btn-danger" onclick="supprimerBoite('${b.id}')" style="width:auto;padding:6px 10px;font-size:0.78rem;">🗑</button>`;
       }
+      const apercuFav = `Condition: ${b.condition.substring(0,50)}`;
       return `
         <div class="boite-card ${classeCard}">
           <div class="boite-header">
@@ -219,7 +225,13 @@
             ${b.condition}
           </div>
           ${contenuHtml}
-          <div class="boite-actions">${actions}</div>
+          <div class="boite-actions">
+            ${actions}
+            <button id="fav-${b.id}"
+              onclick="toggleFavoriLocal('jeu_boite','${b.id}','${apercuFav}')"
+              style="background:none;border:none;font-size:1.2rem;cursor:pointer;padding:4px;"
+              title="Favori">🤍</button>
+          </div>
         </div>`;
     }).join("");
   });
