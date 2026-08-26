@@ -11,15 +11,15 @@
     .question-choix.selec { border-color: var(--rose-fonce); background: var(--rose-clair); }
     .form-question { background: var(--blanc); border-radius: var(--rayon); padding: 20px; box-shadow: var(--ombre); margin-bottom: 24px; }
     .qr-card { background: var(--blanc); border-radius: var(--rayon); padding: 18px; box-shadow: var(--ombre); margin-bottom: 16px; }
-    .qr-question { font-weight: 700; font-size: 1rem; margin-bottom: 14px; color: var(--noir); padding-bottom: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-    .qr-question .q-texte { flex: 1; }
-    .qr-question .q-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .qr-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+    .qr-question { font-weight: 700; font-size: 1rem; color: var(--noir); flex: 1; }
+    .qr-actions  { display: flex; gap: 4px; flex-shrink: 0; }
     .reponse-bloc { margin-bottom: 10px; }
     .reponse-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
     .label-a { color: var(--rose-fonce); }
     .label-b { color: #2a6fc4; }
-    .reponse-texte { background: var(--gris-clair); border-radius: 8px; padding: 10px 14px; font-size: 0.9rem; }
-    .reponse-attente { background: #fff8e1; border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; color: #7a6000; font-style: italic; }
+    .reponse-texte  { background: var(--gris-clair); border-radius: 8px; padding: 10px 14px; font-size: 0.9rem; }
+    .reponse-attente{ background: #fff8e1; border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; color: #7a6000; font-style: italic; }
     .zone-reponse { margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; }
     .tabs { display: flex; background: var(--gris-clair); border-radius: var(--rayon); padding: 4px; margin-bottom: 16px; }
     .tab  { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--gris); transition: all 0.2s; }
@@ -73,14 +73,15 @@
 <script type="module">
   import { getSession, connecterFirebase } from "../auth.js";
   import { ecouterJeu, ajouterItem, modifierItem, supprimerItem, lireSalon } from "../db.js";
-  import { toggleFavori, chargerMesFavoris, estDejaFavori } from "../favoris.js";
-  await chargerMesFavoris(session.code, session.role);
+  import { chargerMesFavoris, estDejaFavori, toggleFavori } from "../favoris.js";
 
   const session = getSession();
   if (!session.code) { window.location.href = "../index.html"; }
-  await connecterFirebase();
 
-  let prenoms = { A: "Joueur A", B: "Joueur B" };
+  await connecterFirebase();
+  await chargerMesFavoris(session.code, session.role);
+
+  let prenoms          = { A: "Joueur A", B: "Joueur B" };
   let questionSelectee = null;
 
   const salon = await lireSalon(session.code);
@@ -89,6 +90,9 @@
     prenoms.B = salon.joueurB?.prenom ?? "Joueur B";
   }
 
+  // =============================================
+  // BANQUE DE QUESTIONS — modifie cette liste !
+  // =============================================
   const BANQUE = [
     "Si tu pouvais dîner avec n'importe qui à travers le monde, qui choisirai-tu ?",
     "Aimerai-tu être célèbre ? De quelle manière ?",
@@ -194,14 +198,14 @@
 
   window.repondre = async (id) => {
     const cleReponse = session.role === "joueurA" ? "reponseA" : "reponseB";
-    const rep = document.getElementById(`rep-${id}`).value.trim();
+    const rep = document.getElementById(`rep-${id}`)?.value.trim();
     if (!rep) { alert("Écris ta réponse avant de valider."); return; }
     await modifierItem(session.code, "jeu_questions", id, { [cleReponse]: rep });
   };
 
-  window.toggleFavoriLocal = async (jeu, itemId, apercu) => {
-    const btn    = document.getElementById("fav-" + itemId);
-    const ajoute = await toggleFavori(session.code, session.role, jeu, itemId, apercu);
+  window.toggleFavoriQuestion = async (id, apercu) => {
+    const btn    = document.getElementById("fav-" + id);
+    const ajoute = await toggleFavori(session.code, session.role, "jeu_questions", id, apercu);
     if (btn) btn.textContent = ajoute ? "❤️" : "🤍";
   };
 
@@ -211,7 +215,12 @@
       fil.innerHTML = `<div class="vide">Aucune question posée.<br>Lance la première ! 💬</div>`;
       return;
     }
+
+    // Reconstruire proprement sans perdre les champs en cours de frappe
+    const idsAffiches = new Set();
     [...questions].reverse().forEach(q => {
+      idsAffiches.add(q.id);
+
       const monRole       = session.role;
       const cleReponse    = monRole === "joueurA" ? "reponseA" : "reponseB";
       const cleAutre      = monRole === "joueurA" ? "reponseB" : "reponseA";
@@ -221,6 +230,8 @@
       const labelAutreCls = monRole === "joueurA" ? "label-b" : "label-a";
       const jaRepondu     = !!q[cleReponse];
       const autreRepondu  = !!q[cleAutre];
+      const dejafav       = estDejaFavori("jeu_questions", q.id);
+      const apercuFav     = q.question.replace(/'/g,"").substring(0, 60);
 
       let maRepHtml = jaRepondu
         ? `<div class="reponse-bloc">
@@ -242,20 +253,19 @@
              </div>`
           : `<div class="reponse-attente">⏳ En attente de la réponse de ${prenomAutre}…</div>`;
 
-      const apercuFav = q.question.substring(0, 60).replace(/'/g, "");
       const html = `
         <div class="qr-card" id="qr-${q.id}">
-          <div class="qr-question">
-            <span class="q-texte">💬 ${q.question}</span>
-            <span class="q-actions">
+          <div class="qr-header">
+            <div class="qr-question">💬 ${q.question}</div>
+            <div class="qr-actions">
               <button id="fav-${q.id}"
-                onclick="toggleFavoriLocal('jeu_questions','${q.id}','${apercuFav}')"
+                onclick="toggleFavoriQuestion('${q.id}','${apercuFav}')"
                 style="background:none;border:none;font-size:1rem;cursor:pointer;padding:2px;"
-                title="Favori">🤍</button>
+                title="Favori">${dejafav ? "❤️" : "🤍"}</button>
               <button onclick="supprimerQuestion('${q.id}')"
                 style="background:none;border:none;font-size:1rem;cursor:pointer;padding:2px;color:#ddd;"
                 title="Supprimer">🗑</button>
-            </span>
+            </div>
           </div>
           ${maRepHtml}
           ${autreRepHtml}
@@ -263,15 +273,17 @@
 
       const existant = document.getElementById(`qr-${q.id}`);
       if (existant) {
+        // Ne remplacer que si le textarea n'est pas en cours de frappe
         const champ = existant.querySelector("textarea");
         if (!champ || !champ.value) existant.outerHTML = html;
       } else {
         fil.innerHTML += html;
       }
     });
-    document.querySelectorAll("[id^='qr-']").forEach(el => {
-      const id = el.id.replace("qr-", "");
-      if (!questions.find(q => q.id === id)) el.remove();
+
+    // Supprimer les cartes orphelines (élément supprimé depuis Firestore)
+    fil.querySelectorAll("[id^='qr-']").forEach(el => {
+      if (!idsAffiches.has(el.id.replace("qr-", ""))) el.remove();
     });
   });
 </script>
