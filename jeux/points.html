@@ -24,16 +24,16 @@
     .filtre-btn { padding: 6px 14px; border-radius: 20px; border: 1.5px solid #ddd; background: var(--blanc); font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--gris); }
     .filtre-btn.actif { border-color: var(--rose-fonce); color: var(--rose-fonce); background: var(--rose-clair); }
     .vide { text-align: center; padding: 32px 0; color: #bbb; font-size: 0.9rem; }
-    .chrono-toggle { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
-    .chrono-toggle input[type=checkbox] { width:18px; height:18px; accent-color:var(--rose-fonce); cursor:pointer; }
-    .chrono-toggle label { font-size:0.9rem; font-weight:600; color:var(--gris); cursor:pointer; }
-    .chrono-fields { display:none; background:var(--gris-clair); border-radius:10px; padding:12px; margin-bottom:12px; }
-    .chrono-fields.visible { display:block; }
-    .chrono-row { display:flex; gap:8px; align-items:center; }
-    .chrono-row input { margin-bottom:0; flex:1; }
-    .chrono-row select { flex:1; padding:12px; border:1.5px solid #ddd; border-radius:var(--rayon); font-size:1rem; background:white; }
-    .chrono-badge  { background:#fff8e1; color:#7a6000; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:20px; display:inline-block; margin-bottom:6px; }
-    .chrono-expire { background:#fde8e8; color:#a32020; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:20px; display:inline-block; margin-bottom:6px; }
+    .chrono-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .chrono-toggle input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--rose-fonce); cursor: pointer; }
+    .chrono-toggle label { font-size: 0.9rem; font-weight: 600; color: var(--gris); cursor: pointer; }
+    .chrono-fields { display: none; background: var(--gris-clair); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+    .chrono-fields.visible { display: block; }
+    .chrono-row { display: flex; gap: 8px; align-items: center; }
+    .chrono-row input { margin-bottom: 0; flex: 1; }
+    .chrono-row select { flex: 1; padding: 12px; border: 1.5px solid #ddd; border-radius: var(--rayon); font-size: 1rem; background: white; }
+    .chrono-badge  { background: #fff8e1; color: #7a6000; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; display: inline-block; margin-bottom: 6px; }
+    .chrono-expire { background: #fde8e8; color: #a32020; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; display: inline-block; margin-bottom: 6px; }
   </style>
 </head>
 <body>
@@ -94,14 +94,17 @@
 <script type="module">
   import { getSession, connecterFirebase, ecouterSalon } from "../auth.js";
   import { ecouterJeu, ajouterItem, modifierItem, supprimerItem, mettreAJourScore, lireSalon } from "../db.js";
-  import { toggleFavori, chargerMesFavoris, estDejaFavori } from "../favoris.js";
-  await chargerMesFavoris(session.code, session.role);
+  import { chargerMesFavoris, estDejaFavori, toggleFavori } from "../favoris.js";
 
   const session = getSession();
   if (!session.code) { window.location.href = "../index.html"; }
+
   await connecterFirebase();
 
-  let filtreCourant = "toutes";
+  // Charger les favoris existants avant le premier rendu
+  await chargerMesFavoris(session.code, session.role);
+
+  let filtreCourant     = "toutes";
   let toutesLesMissions = [];
   let prenoms = { A: "Joueur A", B: "Joueur B" };
 
@@ -128,8 +131,9 @@
   });
 
   window.toggleChrono = () => {
-    document.getElementById("chrono-fields").classList.toggle("visible",
-      document.getElementById("activer-chrono").checked);
+    document.getElementById("chrono-fields").classList.toggle(
+      "visible", document.getElementById("activer-chrono").checked
+    );
   };
 
   window.ajouterMission = async () => {
@@ -137,36 +141,49 @@
     const pts   = parseInt(document.getElementById("pts-mission").value) || 10;
     const msgEl = document.getElementById("msg-form");
     if (!texte) { msgEl.innerHTML = `<div class="msg msg-err">Écris une mission d'abord.</div>`; return; }
+
     const avecChrono = document.getElementById("activer-chrono").checked;
     let deadlineMs = null;
     if (avecChrono) {
-      const val  = parseInt(document.getElementById("chrono-valeur").value) || 24;
-      const unit = document.getElementById("chrono-unite").value;
-      deadlineMs = Date.now() + (unit === "heures" ? val * 3600000 : val * 86400000);
+      const val   = parseInt(document.getElementById("chrono-valeur").value) || 24;
+      const unite = document.getElementById("chrono-unite").value;
+      deadlineMs  = Date.now() + (unite === "heures" ? val * 3600000 : val * 86400000);
     }
+
     try {
       await ajouterItem(session.code, "jeu_points", {
         texte, points: pts, auteur: session.role,
         validee: false, valideeAt: null, deadline: deadlineMs
       });
-      document.getElementById("texte-mission").value = "";
-      document.getElementById("pts-mission").value   = "10";
-      document.getElementById("activer-chrono").checked = false;
+      document.getElementById("texte-mission").value         = "";
+      document.getElementById("pts-mission").value           = "10";
+      document.getElementById("activer-chrono").checked      = false;
       toggleChrono();
       msgEl.innerHTML = `<div class="msg msg-ok">Mission envoyée ! ✓</div>`;
       setTimeout(() => msgEl.innerHTML = "", 2500);
-    } catch(e) { msgEl.innerHTML = `<div class="msg msg-err">${e.message}</div>`; }
+    } catch (e) {
+      msgEl.innerHTML = `<div class="msg msg-err">${e.message}</div>`;
+    }
   };
 
   window.validerMission = async (id, points, auteur) => {
     if (!confirm(`Confirmes-tu que la mission a été accomplie ? (+${points} pts)`)) return;
-    await modifierItem(session.code, "jeu_points", id, { validee: true, valideeAt: new Date().toISOString() });
-    await mettreAJourScore(session.code, "points", auteur === "joueurA" ? "joueurB" : "joueurA", points);
+    await modifierItem(session.code, "jeu_points", id, {
+      validee: true, valideeAt: new Date().toISOString()
+    });
+    const beneficiaire = auteur === "joueurA" ? "joueurB" : "joueurA";
+    await mettreAJourScore(session.code, "points", beneficiaire, points);
   };
 
   window.supprimerMission = async (id) => {
     if (!confirm("Supprimer cette mission ?")) return;
     await supprimerItem(session.code, "jeu_points", id);
+  };
+
+  window.toggleFavoriMission = async (id, apercu) => {
+    const btn    = document.getElementById("fav-" + id);
+    const ajoute = await toggleFavori(session.code, session.role, "jeu_points", id, apercu);
+    if (btn) btn.textContent = ajoute ? "❤️" : "🤍";
   };
 
   window.filtrer = (type, btn) => {
@@ -176,39 +193,40 @@
     afficherMissions();
   };
 
-  // Favori
-  window.toggleFavoriLocal = async (jeu, itemId, apercu) => {
-    const btn    = document.getElementById("fav-" + itemId);
-    const ajoute = await toggleFavori(session.code, session.role, jeu, itemId, apercu);
-    if (btn) btn.textContent = ajoute ? "❤️" : "🤍";
-  };
-
   function afficherMissions() {
     const liste = document.getElementById("liste-missions");
     let missions = [...toutesLesMissions];
     if (filtreCourant === "en-cours") missions = missions.filter(m => !m.validee);
     if (filtreCourant === "validees") missions = missions.filter(m =>  m.validee);
+
     if (missions.length === 0) {
       liste.innerHTML = `<div class="vide">Aucune mission ici.<br>Sois le premier à en proposer une ! 🎯</div>`;
       return;
     }
+
     liste.innerHTML = missions.map(m => {
       const estMienne    = m.auteur === session.role;
       const classeCard   = estMienne ? "mienne" : "partenaire";
       const classeValide = m.validee ? "validee" : "";
       const prenomAuteur = m.auteur === "joueurA" ? prenoms.A : prenoms.B;
+      const dejafav      = estDejaFavori("jeu_points", m.id);
+      const apercuFav    = m.texte.replace(/'/g, "").substring(0, 80);
+
       let actions = "";
       if (!m.validee && estMienne) {
         actions = `
           <button class="btn btn-vert"   onclick="validerMission('${m.id}',${m.points},'${m.auteur}')">✓ Valider</button>
           <button class="btn btn-danger" onclick="supprimerMission('${m.id}')">🗑</button>`;
       } else if (m.validee) {
-        actions = `<span style="color:var(--vert);font-size:0.85rem;font-weight:600;">✓ Accomplie</span>
+        actions = `
+          <span style="color:var(--vert);font-size:0.85rem;font-weight:600;">✓ Accomplie</span>
           <button class="btn btn-danger" onclick="supprimerMission('${m.id}')" style="width:auto;padding:6px 10px;font-size:0.78rem;margin-left:8px;">🗑</button>`;
       } else {
-        actions = `<span style="color:var(--gris);font-size:0.82rem;">En attente de validation</span>
+        actions = `
+          <span style="color:var(--gris);font-size:0.82rem;">En attente de validation</span>
           <button class="btn btn-danger" onclick="supprimerMission('${m.id}')" style="width:auto;padding:6px 10px;font-size:0.78rem;margin-left:8px;">🗑</button>`;
       }
+
       let chronoHtml = "";
       if (m.deadline && !m.validee) {
         const restant = m.deadline - Date.now();
@@ -218,9 +236,11 @@
           const j  = Math.floor(restant / 86400000);
           const h  = Math.floor((restant % 86400000) / 3600000);
           const mn = Math.floor((restant % 3600000)  / 60000);
-          chronoHtml = `<div class="chrono-badge">⏱ ${j>0?`${j}j ${h}h`:h>0?`${h}h ${mn}min`:`${mn} min`} restant</div>`;
+          const txt = j > 0 ? `${j}j ${h}h` : h > 0 ? `${h}h ${mn}min` : `${mn} min`;
+          chronoHtml = `<div class="chrono-badge">⏱ ${txt} restant</div>`;
         }
       }
+
       return `
         <div class="mission-card ${classeCard} ${classeValide}">
           <div class="mission-header">
@@ -232,9 +252,9 @@
           <div class="mission-actions">
             ${actions}
             <button id="fav-${m.id}"
-              onclick="toggleFavoriLocal('jeu_points','${m.id}','${m.texte.replace(/'/g,"").substring(0,60)}')"
+              onclick="toggleFavoriMission('${m.id}','${apercuFav}')"
               style="background:none;border:none;font-size:1.2rem;cursor:pointer;padding:4px;"
-              title="Favori">🤍</button>
+              title="Favori">${dejafav ? "❤️" : "🤍"}</button>
           </div>
         </div>`;
     }).join("");
