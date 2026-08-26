@@ -81,12 +81,13 @@
 <script type="module">
   import { getSession, connecterFirebase } from "../auth.js";
   import { ecouterJeu, ajouterItem, modifierItem, supprimerItem, lireSalon } from "../db.js";
-  import { toggleFavori, chargerMesFavoris, estDejaFavori } from "../favoris.js";
-  await chargerMesFavoris(session.code, session.role);
-   
+  import { chargerMesFavoris, estDejaFavori, toggleFavori } from "../favoris.js";
+
   const session = getSession();
   if (!session.code) { window.location.href = "../index.html"; }
+
   await connecterFirebase();
+  await chargerMesFavoris(session.code, session.role);
 
   let prenoms     = { A: "Joueur A", B: "Joueur B" };
   let typeCourant = "texte";
@@ -113,8 +114,8 @@
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
-        const MAX_LARGEUR = 800;
-        const ratio = Math.min(1, MAX_LARGEUR / img.width);
+        const MAX = 800;
+        const ratio  = Math.min(1, MAX / img.width);
         const canvas = document.createElement("canvas");
         canvas.width  = img.width  * ratio;
         canvas.height = img.height * ratio;
@@ -138,6 +139,7 @@
     const condition = document.getElementById("condition-secret").value.trim();
     const msgEl     = document.getElementById("msg-form-boite");
     if (!condition) { msgEl.innerHTML = `<div class="msg msg-err">Définis une condition à remplir.</div>`; return; }
+
     let contenu = "";
     if (typeCourant === "texte") {
       contenu = document.getElementById("contenu-secret").value.trim();
@@ -145,9 +147,10 @@
     } else {
       if (!photoBase64) { msgEl.innerHTML = `<div class="msg msg-err">Choisis une photo d'abord.</div>`; return; }
       const tailleKo = Math.round(photoBase64.length * 0.75 / 1024);
-      if (tailleKo > 900) { msgEl.innerHTML = `<div class="msg msg-err">Photo trop lourde.</div>`; return; }
+      if (tailleKo > 900) { msgEl.innerHTML = `<div class="msg msg-err">Photo trop lourde, essaie-en une autre.</div>`; return; }
       contenu = photoBase64;
     }
+
     try {
       msgEl.innerHTML = `<div class="msg msg-info">Envoi en cours…</div>`;
       await ajouterItem(session.code, "jeu_boite", {
@@ -158,12 +161,14 @@
       document.getElementById("condition-secret").value = "";
       document.getElementById("apercu-photo").classList.remove("visible");
       document.getElementById("info-taille").textContent = "";
-      document.getElementById("input-photo").value = "";
+      document.getElementById("input-photo").value       = "";
       photoBase64 = null;
       setType("texte");
       msgEl.innerHTML = `<div class="msg msg-ok">Boîte envoyée ! ✓</div>`;
       setTimeout(() => msgEl.innerHTML = "", 2500);
-    } catch(e) { msgEl.innerHTML = `<div class="msg msg-err">Erreur : ${e.message}</div>`; }
+    } catch (e) {
+      msgEl.innerHTML = `<div class="msg msg-err">Erreur : ${e.message}</div>`;
+    }
   };
 
   window.validerCondition = async (id) => {
@@ -176,9 +181,9 @@
     await supprimerItem(session.code, "jeu_boite", id);
   };
 
-  window.toggleFavoriLocal = async (jeu, itemId, apercu) => {
-    const btn    = document.getElementById("fav-" + itemId);
-    const ajoute = await toggleFavori(session.code, session.role, jeu, itemId, apercu);
+  window.toggleFavoriBoite = async (id, apercu) => {
+    const btn    = document.getElementById("fav-" + id);
+    const ajoute = await toggleFavori(session.code, session.role, "jeu_boite", id, apercu);
     if (btn) btn.textContent = ajoute ? "❤️" : "🤍";
   };
 
@@ -192,9 +197,13 @@
       const estMienne    = b.auteur === session.role;
       const classeCard   = estMienne ? "mienne" : "partenaire";
       const prenomAuteur = b.auteur === "joueurA" ? prenoms.A : prenoms.B;
-      const statutHtml   = b.ouverte
+      const dejafav      = estDejaFavori("jeu_boite", b.id);
+      const apercuFav    = `Condition: ${b.condition.replace(/'/g,"").substring(0,50)}`;
+
+      const statutHtml = b.ouverte
         ? `<span class="boite-statut statut-ouvert">🔓 Ouverte</span>`
         : `<span class="boite-statut statut-ferme">🔒 Fermée</span>`;
+
       let contenuHtml = "";
       if (b.ouverte) {
         contenuHtml = b.type === "photo"
@@ -203,6 +212,7 @@
       } else {
         contenuHtml = `<div class="cadenas">${b.type === "photo" ? "📷🔒" : "🔒"}</div>`;
       }
+
       let actions = "";
       if (!b.ouverte && estMienne) {
         actions = `
@@ -211,10 +221,11 @@
       } else if (!b.ouverte && !estMienne) {
         actions = `<span style="color:var(--gris);font-size:0.82rem;">En attente que ${prenomAuteur} valide…</span>`;
       } else {
-        actions = `<span style="color:var(--vert);font-size:0.85rem;font-weight:600;">✓ Révélée</span>
-          <button class="btn btn-danger" onclick="supprimerBoite('${b.id}')" style="width:auto;padding:6px 10px;font-size:0.78rem;">🗑</button>`;
+        actions = `
+          <span style="color:var(--vert);font-size:0.85rem;font-weight:600;">✓ Révélée</span>
+          <button class="btn btn-danger" onclick="supprimerBoite('${b.id}')" style="width:auto;padding:6px 10px;font-size:0.78rem;margin-left:8px;">🗑</button>`;
       }
-      const apercuFav = `Condition: ${b.condition.substring(0,50)}`;
+
       return `
         <div class="boite-card ${classeCard}">
           <div class="boite-header">
@@ -229,9 +240,9 @@
           <div class="boite-actions">
             ${actions}
             <button id="fav-${b.id}"
-              onclick="toggleFavoriLocal('jeu_boite','${b.id}','${apercuFav}')"
+              onclick="toggleFavoriBoite('${b.id}','${apercuFav}')"
               style="background:none;border:none;font-size:1.2rem;cursor:pointer;padding:4px;"
-              title="Favori">🤍</button>
+              title="Favori">${dejafav ? "❤️" : "🤍"}</button>
           </div>
         </div>`;
     }).join("");
