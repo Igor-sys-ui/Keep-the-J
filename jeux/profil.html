@@ -14,6 +14,7 @@
     .humeur-emoji-grand { font-size: 2.6rem; display: block; margin-bottom: 6px; }
     .humeur-nom  { font-weight: 700; font-size: 0.9rem; color: var(--noir); }
     .humeur-lbl  { font-size: 0.8rem; color: var(--gris); margin-top: 2px; }
+    .humeur-note-profil { font-size: 0.75rem; color: var(--gris); margin-top: 3px; font-style: italic; }
     .humeur-hint { font-size: 0.7rem; color: #bbb; margin-top: 4px; }
     .profils-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
     .profil-card { background: var(--blanc); border-radius: var(--rayon); padding: 16px; box-shadow: var(--ombre); text-align: center; }
@@ -50,11 +51,25 @@
     .fav-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
     .fav-tab { padding: 6px 12px; border-radius: 20px; border: 1.5px solid #ddd; background: var(--blanc); font-size: 0.78rem; font-weight: 600; cursor: pointer; color: var(--gris); transition: all 0.2s; }
     .fav-tab.actif { border-color: #f9c74f; color: #7a5c00; background: #fff8e1; }
-    .favori-card { background: var(--blanc); border-radius: var(--rayon); padding: 14px 16px; box-shadow: var(--ombre); margin-bottom: 10px; border-left: 4px solid #f9c74f; }
-    .favori-jeu  { font-size: 0.72rem; color: var(--gris); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+    /* Cartes favoris */
+    .favori-card { background: var(--blanc); border-radius: var(--rayon); padding: 14px 16px; box-shadow: var(--ombre); margin-bottom: 10px; border-left: 4px solid #f9c74f; cursor: pointer; transition: transform 0.15s; }
+    .favori-card:hover { transform: translateX(4px); }
+    .favori-jeu   { font-size: 0.72rem; color: var(--gris); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
     .favori-texte { font-size: 0.9rem; font-weight: 600; color: var(--noir); }
     .favori-meta  { font-size: 0.72rem; color: #bbb; margin-top: 4px; }
+    .favori-hint  { font-size: 0.7rem; color: #ccc; margin-top: 2px; }
     .vide { text-align: center; padding: 24px 0; color: #bbb; font-size: 0.9rem; }
+    /* Modal pour consulter un favori */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; padding: 16px; }
+    .modal-overlay.visible { display: flex; }
+    .modal-favori { background: var(--blanc); border-radius: var(--rayon); width: 100%; max-width: 420px; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.25); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #eee; }
+    .modal-header h2 { font-size: 1rem; margin: 0; }
+    .modal-fermer { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--gris); padding: 4px; }
+    .modal-body { padding: 16px; }
+    .modal-body img { width: 100%; border-radius: 10px; margin-bottom: 12px; display: block; }
+    .modal-body .favori-contenu-texte { background: var(--gris-clair); border-radius: 10px; padding: 14px; font-size: 0.95rem; color: var(--noir); line-height: 1.5; }
+    .modal-body .favori-meta-detail { font-size: 0.78rem; color: var(--gris); margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -75,14 +90,16 @@
     <div class="humeurs-duo">
       <a href="humeur.html" class="humeur-card moi">
         <span class="humeur-emoji-grand" id="emoji-moi">❓</span>
-        <div class="humeur-nom"  id="nom-humeur-moi">—</div>
-        <div class="humeur-lbl"  id="lbl-humeur-moi">Non renseigné</div>
+        <div class="humeur-nom"        id="nom-humeur-moi">—</div>
+        <div class="humeur-lbl"        id="lbl-humeur-moi">Non renseigné</div>
+        <div class="humeur-note-profil" id="note-humeur-moi"></div>
         <div class="humeur-hint">Appuie pour changer</div>
       </a>
       <a href="humeur.html" class="humeur-card autre">
         <span class="humeur-emoji-grand" id="emoji-autre">❓</span>
-        <div class="humeur-nom"  id="nom-humeur-autre">—</div>
-        <div class="humeur-lbl"  id="lbl-humeur-autre">Non renseigné</div>
+        <div class="humeur-nom"         id="nom-humeur-autre">—</div>
+        <div class="humeur-lbl"         id="lbl-humeur-autre">Non renseigné</div>
+        <div class="humeur-note-profil"  id="note-humeur-autre"></div>
         <div class="humeur-hint">Voir l'historique</div>
       </a>
     </div>
@@ -129,7 +146,6 @@
       <tbody id="tbody-scores"></tbody>
     </table>
 
-    <!-- Stats -->
     <div class="section-titre">📊 Mes statistiques</div>
     <div class="stats-grid" id="stats-grid"></div>
 
@@ -138,6 +154,17 @@
     <div class="fav-tabs" id="fav-tabs"></div>
     <div id="liste-favoris"><div class="spinner">Chargement…</div></div>
 
+  </div>
+</div>
+
+<!-- Modal consultation favori -->
+<div class="modal-overlay" id="modal-favori" onclick="fermerModal(event)">
+  <div class="modal-favori">
+    <div class="modal-header">
+      <h2 id="modal-titre">Favori</h2>
+      <button class="modal-fermer" onclick="document.getElementById('modal-favori').classList.remove('visible')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
 
@@ -172,7 +199,7 @@
     document.getElementById("nom-humeur-moi").textContent   = prenomMoi;
     document.getElementById("nom-humeur-autre").textContent = prenomAutre;
 
-    // ===== HUMEUR temps réel =====
+    // ===== HUMEUR — temps réel avec note =====
     ecouterJeu(session.code, "jeu_humeur", (items) => {
       const derniereMoi   = [...items]
         .filter(h => h.auteur === session.role)
@@ -180,13 +207,21 @@
       const derniereAutre = [...items]
         .filter(h => h.auteur !== session.role)
         .sort((a, b) => (b.horodatage || 0) - (a.horodatage || 0))[0];
+
       if (derniereMoi) {
-        document.getElementById("emoji-moi").textContent       = derniereMoi.emoji;
-        document.getElementById("lbl-humeur-moi").textContent  = derniereMoi.label;
+        document.getElementById("emoji-moi").textContent        = derniereMoi.emoji;
+        document.getElementById("lbl-humeur-moi").textContent   = derniereMoi.label;
+        // Afficher la note si elle existe
+        document.getElementById("note-humeur-moi").textContent  = derniereMoi.note
+          ? `"${derniereMoi.note}"`
+          : "";
       }
       if (derniereAutre) {
-        document.getElementById("emoji-autre").textContent      = derniereAutre.emoji;
-        document.getElementById("lbl-humeur-autre").textContent = derniereAutre.label;
+        document.getElementById("emoji-autre").textContent       = derniereAutre.emoji;
+        document.getElementById("lbl-humeur-autre").textContent  = derniereAutre.label;
+        document.getElementById("note-humeur-autre").textContent = derniereAutre.note
+          ? `"${derniereAutre.note}"`
+          : "";
       }
     });
 
@@ -201,7 +236,6 @@
       let totalMoi = 0, totalAutre = 0;
       const tbody = document.getElementById("tbody-scores");
       tbody.innerHTML = "";
-
       JEUX_SCORES.forEach(j => {
         const scores     = sc[j.key] ?? { A: 0, B: 0 };
         const scoreMoi   = scores[cleScore]  || 0;
@@ -222,7 +256,6 @@
             <td>${btnReset}</td>
           </tr>`;
       });
-
       tbody.innerHTML += `
         <tr style="border-top:2px solid #eee;font-weight:700;">
           <td class="jeu-nom">Total</td>
@@ -230,7 +263,6 @@
           <td class="score-cell ${totalAutre>totalMoi?"gagne":totalAutre<totalMoi?"perd":"egal"}">${totalAutre}</td>
           <td></td>
         </tr>`;
-
       document.getElementById("score-total-moi").textContent   = totalMoi;
       document.getElementById("score-total-autre").textContent = totalAutre;
       const grand = totalMoi + totalAutre;
@@ -246,20 +278,13 @@
         const demande = resetsDemandes[j.key];
         if (!demande) return;
         if (demande.demandePar === session.role) {
-          html += `<div class="reset-demande">
-            ⏳ Tu as demandé la remise à zéro de <strong>${j.nom}</strong>.<br>
-            En attente de <strong>${prenomAutre}</strong>…
-            <br><button class="btn btn-gris" onclick="annulerResetJeu('${j.key}')"
-              style="width:auto;padding:6px 12px;font-size:0.8rem;margin-top:8px;">Annuler</button>
-          </div>`;
+          html += `<div class="reset-demande">⏳ Tu as demandé la remise à zéro de <strong>${j.nom}</strong>. En attente de <strong>${prenomAutre}</strong>…
+            <br><button class="btn btn-gris" onclick="annulerResetJeu('${j.key}')" style="width:auto;padding:6px 12px;font-size:0.8rem;margin-top:8px;">Annuler</button></div>`;
         } else {
-          html += `<div class="reset-demande">
-            <strong>${prenomAutre}</strong> demande la remise à zéro de <strong>${j.nom}</strong>.
+          html += `<div class="reset-demande"><strong>${prenomAutre}</strong> demande la remise à zéro de <strong>${j.nom}</strong>.
             <br>
-            <button class="btn btn-vert" onclick="confirmerResetJeu('${j.key}')"
-              style="width:auto;padding:8px 14px;font-size:0.85rem;margin-top:8px;">✓ Confirmer</button>
-            <button class="btn btn-danger" onclick="annulerResetJeu('${j.key}')"
-              style="width:auto;padding:8px 14px;font-size:0.85rem;margin-top:8px;margin-left:8px;">✗ Refuser</button>
+            <button class="btn btn-vert"   onclick="confirmerResetJeu('${j.key}')" style="width:auto;padding:8px 14px;font-size:0.85rem;margin-top:8px;">✓ Confirmer</button>
+            <button class="btn btn-danger" onclick="annulerResetJeu('${j.key}')"  style="width:auto;padding:8px 14px;font-size:0.85rem;margin-top:8px;margin-left:8px;">✗ Refuser</button>
           </div>`;
         }
       });
@@ -280,9 +305,7 @@
       });
     };
     window.annulerResetJeu = async (key) => {
-      await updateDoc(doc(db, "salons", session.code), {
-        [`resetDemande.${key}`]: null
-      });
+      await updateDoc(doc(db, "salons", session.code), { [`resetDemande.${key}`]: null });
     };
 
     ecouterSalon(session.code, (data) => {
@@ -297,35 +320,16 @@
       lireJeuUneFois(session.code, "jeu_boite"),
       lireJeuUneFois(session.code, "jeu_concours"),
     ]);
-
     const cleMoi = estA ? "reponseA" : "reponseB";
     document.getElementById("stats-grid").innerHTML = `
-      <div class="stat-card">
-        <div class="stat-val">${points.filter(m => m.validee).length}</div>
-        <div class="stat-lbl">Missions accomplies</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">${points.length}</div>
-        <div class="stat-lbl">Missions créées</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">${questions.filter(q => q[cleMoi]).length}/${questions.length}</div>
-        <div class="stat-lbl">Questions répondues</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">${dessins.filter(d => d.auteur !== session.role && d.valide === true).length}</div>
-        <div class="stat-lbl">Dessins devinés</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">${boites.filter(b => b.auteur !== session.role && b.ouverte).length}/${boites.filter(b => b.auteur !== session.role).length}</div>
-        <div class="stat-lbl">Boîtes ouvertes</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">${concours.filter(c => c.termine && c.vainqueur === cleScore).length}/${concours.filter(c => c.termine).length}</div>
-        <div class="stat-lbl">Concours gagnés</div>
-      </div>`;
+      <div class="stat-card"><div class="stat-val">${points.filter(m=>m.validee).length}</div><div class="stat-lbl">Missions accomplies</div></div>
+      <div class="stat-card"><div class="stat-val">${points.length}</div><div class="stat-lbl">Missions créées</div></div>
+      <div class="stat-card"><div class="stat-val">${questions.filter(q=>q[cleMoi]).length}/${questions.length}</div><div class="stat-lbl">Questions répondues</div></div>
+      <div class="stat-card"><div class="stat-val">${dessins.filter(d=>d.auteur!==session.role&&d.valide===true).length}</div><div class="stat-lbl">Dessins devinés</div></div>
+      <div class="stat-card"><div class="stat-val">${boites.filter(b=>b.auteur!==session.role&&b.ouverte).length}/${boites.filter(b=>b.auteur!==session.role).length}</div><div class="stat-lbl">Boîtes ouvertes</div></div>
+      <div class="stat-card"><div class="stat-val">${concours.filter(c=>c.termine&&c.vainqueur===cleScore).length}/${concours.filter(c=>c.termine).length}</div><div class="stat-lbl">Concours gagnés</div></div>`;
 
-    // ===== FAVORIS triés par jeu avec onglets =====
+    // ===== FAVORIS avec modal de consultation =====
     const NOMS_JEUX = {
       "jeu_points":     { label: "🏆 Défis",          couleur: "#f9c74f" },
       "jeu_boite":      { label: "🔒 Boîte Secrète",  couleur: "#e8a0b4" },
@@ -336,6 +340,29 @@
       "jeu_carte":      { label: "🗺️ Notre Carte",     couleur: "#6bbf8e" },
     };
 
+    // Charger TOUS les items des jeux pour pouvoir afficher le contenu complet dans le modal
+    const [
+      itemsPoints, itemsBoite, itemsPicto, itemsQuestions, itemsConcours
+    ] = await Promise.all([
+      lireJeuUneFois(session.code, "jeu_points"),
+      lireJeuUneFois(session.code, "jeu_boite"),
+      lireJeuUneFois(session.code, "jeu_pictionary"),
+      lireJeuUneFois(session.code, "jeu_questions"),
+      lireJeuUneFois(session.code, "jeu_concours"),
+    ]);
+
+    // Index rapide : jeu -> { itemId -> item }
+    function indexer(items) {
+      return Object.fromEntries(items.map(i => [i.id, i]));
+    }
+    const INDEX = {
+      "jeu_points":     indexer(itemsPoints),
+      "jeu_boite":      indexer(itemsBoite),
+      "jeu_pictionary": indexer(itemsPicto),
+      "jeu_questions":  indexer(itemsQuestions),
+      "jeu_concours":   indexer(itemsConcours),
+    };
+
     const tousLesFavoris = await lireJeuUneFois(session.code, "jeu_favoris");
     const mesFavoris     = tousLesFavoris
       .filter(f => f.auteur === session.role)
@@ -344,9 +371,76 @@
     const listeFavEl     = document.getElementById("liste-favoris");
     const favTabsEl      = document.getElementById("fav-tabs");
     let filtreFavActif   = "tous";
-
-    // Jeux qui ont au moins un favori
     const jeuxAvecFavoris = [...new Set(mesFavoris.map(f => f.jeu))];
+
+    // Ouvrir le modal avec le contenu complet du favori
+    window.ouvrirFavori = (jeu, itemId) => {
+      const item   = INDEX[jeu]?.[itemId];
+      const info   = NOMS_JEUX[jeu] ?? { label: jeu };
+      const modal  = document.getElementById("modal-favori");
+      const titre  = document.getElementById("modal-titre");
+      const body   = document.getElementById("modal-body");
+
+      titre.textContent = info.label;
+
+      if (!item) {
+        body.innerHTML = `<div class="favori-contenu-texte" style="color:#bbb;">Cet élément a été supprimé du jeu.</div>`;
+        modal.classList.add("visible");
+        return;
+      }
+
+      let contenu = "";
+      const date  = item.creeAt?.toDate
+        ? item.creeAt.toDate().toLocaleDateString("fr-FR")
+        : new Date(item.horodatage || item.ts || 0).toLocaleDateString("fr-FR");
+
+      if (jeu === "jeu_points") {
+        contenu = `
+          <div class="favori-contenu-texte">${item.texte}</div>
+          <div class="favori-meta-detail">
+            ${item.points} pts · ${item.validee ? "✓ Accomplie" : "En cours"}
+          </div>`;
+      } else if (jeu === "jeu_boite") {
+        const contenuBoite = item.ouverte
+          ? (item.type === "photo"
+              ? `<img src="${item.contenu}" alt="Photo secrète">`
+              : `<div class="favori-contenu-texte">${item.contenu}</div>`)
+          : `<div class="favori-contenu-texte" style="color:#bbb;">🔒 Contenu encore verrouillé</div>`;
+        contenu = `
+          <div style="font-size:0.82rem;color:var(--gris);margin-bottom:8px;">🎯 Condition : ${item.condition}</div>
+          ${contenuBoite}`;
+      } else if (jeu === "jeu_pictionary") {
+        contenu = `
+          <img src="${item.imageData}" alt="Dessin">
+          <div class="favori-meta-detail">🧠 Souvenir : ${item.souvenir}</div>`;
+      } else if (jeu === "jeu_questions") {
+        const repA = item.reponseA ? `<div style="margin-bottom:8px;"><strong style="color:var(--rose-fonce);">${prenomA} :</strong><br>${item.reponseA}</div>` : "";
+        const repB = item.reponseB ? `<div><strong style="color:#2a6fc4;">${prenomB} :</strong><br>${item.reponseB}</div>` : "";
+        contenu = `
+          <div style="font-weight:700;margin-bottom:12px;">💬 ${item.question}</div>
+          <div class="favori-contenu-texte">${repA}${repB || "<em style='color:#bbb;'>L'autre n'a pas encore répondu</em>"}</div>`;
+      } else if (jeu === "jeu_concours") {
+        const photoRef = item.lancePar === "joueurA" ? item.photoA : item.photoB;
+        const photoRep = item.lancePar === "joueurA" ? item.photoB : item.photoA;
+        contenu = `
+          <div style="font-weight:700;margin-bottom:8px;">📷 ${item.titre}</div>
+          ${photoRef ? `<img src="${photoRef}" alt="Photo référence" style="margin-bottom:8px;">` : ""}
+          ${photoRep ? `<img src="${photoRep}" alt="Photo réponse">` : ""}
+          ${item.vainqueur ? `<div class="favori-meta-detail" style="margin-top:8px;">🏆 Gagnant : ${item.vainqueur === "egalite" ? "Égalité" : prenoms[item.vainqueur]}</div>` : ""}`;
+      } else {
+        contenu = `<div class="favori-contenu-texte">${item.apercu ?? "Élément favori"}</div>`;
+      }
+
+      body.innerHTML = `${contenu}<div class="favori-meta-detail" style="margin-top:10px;">Ajouté le ${date}</div>`;
+      modal.classList.add("visible");
+    };
+
+    // Fermer le modal en cliquant sur l'overlay (pas sur le contenu)
+    window.fermerModal = (e) => {
+      if (e.target === document.getElementById("modal-favori")) {
+        document.getElementById("modal-favori").classList.remove("visible");
+      }
+    };
 
     function afficherFavoris() {
       const favorisAffiches = filtreFavActif === "tous"
@@ -364,16 +458,21 @@
 
       listeFavEl.innerHTML = favorisAffiches.map(f => {
         const info = NOMS_JEUX[f.jeu] ?? { label: f.jeu, couleur: "#ddd" };
+        // Vérifier si l'item existe encore dans l'index
+        const itemExiste = !!(INDEX[f.jeu]?.[f.itemId]);
         return `
-          <div class="favori-card" style="border-left-color:${info.couleur};">
+          <div class="favori-card" style="border-left-color:${info.couleur};"
+            onclick="ouvrirFavori('${f.jeu}','${f.itemId}')">
             <div class="favori-jeu">${info.label}</div>
             <div class="favori-texte">${f.apercu ?? "Élément favori"}</div>
             <div class="favori-meta">${new Date(f.ts || 0).toLocaleDateString("fr-FR")}</div>
+            ${itemExiste
+              ? `<div class="favori-hint">Appuie pour consulter →</div>`
+              : `<div class="favori-hint" style="color:#e07070;">Élément supprimé du jeu</div>`}
           </div>`;
       }).join("");
     }
 
-    // Construire les onglets de filtre
     if (mesFavoris.length > 0) {
       const totalBtn = `<button class="fav-tab actif" onclick="filtrerFavs('tous',this)">Tous (${mesFavoris.length})</button>`;
       const jeuxBtns = jeuxAvecFavoris.map(jeu => {
