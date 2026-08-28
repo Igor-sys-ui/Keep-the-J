@@ -281,6 +281,13 @@
   // =====================
   // AFFICHAGE
   // =====================
+
+  window.toggleFavoriConcours = async (id, apercu) => {
+    const btn    = document.getElementById("fav-" + id);
+    const ajoute = await toggleFavori(session.code, session.role, "jeu_concours", id, apercu);
+    if (btn) btn.textContent = ajoute ? "❤️" : "🤍";
+  };  
+  
   ecouterJeu(session.code, "jeu_concours", (concours) => {
     const fil = document.getElementById("fil-concours");
  
