@@ -418,6 +418,10 @@
           ${resultatHtml}
           <div class="card-footer">
             <button class="btn btn-danger" onclick="supprimerDefi('${c.id}')">🗑 Supprimer</button>
+            <button id="fav-${c.id}"
+              onclick="toggleFavoriConcours('${c.id}','Concours: ${c.titre.replace(/'/g,'')}')"
+              style="background:none;border:none;font-size:1.2rem;cursor:pointer;padding:4px;"
+              title="Favori">${estDejaFavori("jeu_concours", c.id) ? "❤️" : "🤍"}</button>
           </div>
         </div>`;
     }).join("");
