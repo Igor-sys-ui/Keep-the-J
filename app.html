@@ -1,396 +1,90 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Keep The J — Hub</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .top-bar h1 { font-size: 1.5rem; color: var(--rose-fonce); }
-    .salon-info { background: var(--blanc); border-radius: var(--rayon); padding: 16px 20px; box-shadow: var(--ombre); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-    .salon-info .joueurs { display: flex; gap: 10px; align-items: center; }
-    .salon-info .code-salon { font-size: 0.78rem; color: var(--gris); text-align: right; }
-    .salon-info .code-salon span { font-weight: 700; color: var(--rose-fonce); letter-spacing: 1px; }
-    .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; margin-top: 8px; }
-    .jeu-card.points     { border-color: #f9c74f; }
-    .jeu-card.boite      { border-color: var(--rose); }
-    .jeu-card.pictionary { border-color: #90d7ff; }
-    .jeu-card.questions  { border-color: var(--vert); }
-    .jeu-card.calendrier { border-color: #f4a261; }
-    .jeu-card.bereal     { border-color: #ff6b9d; }
-    .jeu-card.concours   { border-color: #b5a0e8; }
-    .jeu-card.carte      { border-color: #6bbf8e; }
-    .jeu-card.profil     { border-color: #aaa; }
-    .jeu-card.escape     { border-color: #aaa; }
-    .jeu-card.bientot { opacity: 0.5; cursor: default; pointer-events: none; }
-    .jeu-card .bientot-badge { font-size: 0.7rem; background: #eee; color: #999; padding: 2px 8px; border-radius: 20px; }
-    .btn-deco { background: none; border: none; color: var(--gris); font-size: 1.3rem; cursor: pointer; padding: 4px; }
-    .statut-partenaire { font-size: 0.82rem; color: var(--gris); text-align: center; margin-bottom: 16px; }
-    .statut-partenaire .online  { color: var(--vert); font-weight: 700; }
-    .statut-partenaire .attente { color: #f4a261; font-weight: 700; }
-    .jeu-card { position: relative; }
-    .notif-bulle {
-      position: absolute; top: -8px; right: -8px;
-      background: #e53935; color: white;
-      font-size: 0.72rem; font-weight: 700;
-      min-width: 20px; height: 20px;
-      border-radius: 10px; display: none;
-      align-items: center; justify-content: center;
-      padding: 0 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      animation: pulse-notif 2s infinite;
-    }
-    @keyframes pulse-notif {
-      0%,100% { transform: scale(1); }
-      50%      { transform: scale(1.15); }
-    }
-    /* Bandeau humeur */
-    .humeur-bandeau {
-      background: var(--blanc); border-radius: var(--rayon);
-      box-shadow: var(--ombre); padding: 12px 16px; margin-bottom: 14px;
-      display: flex; align-items: center; justify-content: space-between;
-      text-decoration: none; color: var(--noir); border: 1px solid #eee;
-    }
-    .hb-titre { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gris); }
-    .hb-duo { display: flex; gap: 16px; align-items: center; }
-    .hb-joueur { display: flex; align-items: center; gap: 6px; }
-    .hb-emoji { font-size: 1.4rem; }
-    .hb-nom { font-size: 0.72rem; color: var(--gris); }
-    /* Bandeau profil */
-    .profil-bandeau {
-      background: var(--blanc); border-radius: var(--rayon);
-      box-shadow: var(--ombre); padding: 14px 16px; margin-top: 20px;
-      display: flex; align-items: center; justify-content: space-between;
-      text-decoration: none; color: var(--noir); border: 1px solid #eee;
-    }
-    .pb-gauche { display: flex; align-items: center; gap: 12px; }
-    .pb-avatar { font-size: 1.6rem; }
-    .pb-nom { font-weight: 700; font-size: 0.95rem; }
-    .pb-sub { font-size: 0.78rem; color: var(--gris); }
-    .pb-scores { display: flex; gap: 14px; align-items: center; }
-    .pb-score { text-align: center; }
-    .pb-score .val { font-size: 1.2rem; font-weight: 700; color: var(--rose-fonce); }
-    .pb-score .lbl { font-size: 0.68rem; color: var(--gris); }
-  </style>
-</head>
-<body>
-<div class="container">
+// =============================================
+// DB.JS — Fonctions utilitaires Firestore
+// =============================================
 
-  <div class="top-bar">
-    <h1> Keep The J</h1>
-    <button class="btn-deco" onclick="deconnecterSession()" title="Quitter">🚪</button>
-  </div>
+import { db } from "./firebase-config.js";
+import {
+  doc, collection, addDoc, updateDoc, deleteDoc,
+  onSnapshot, getDoc, getDocs, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-  <div id="chargement" class="spinner">Connexion en cours…</div>
-
-  <div id="contenu" style="display:none">
-
-    <div class="salon-info">
-      <div class="joueurs">
-        <span class="badge badge-a" id="nom-a">—</span>
-        <span style="color:#ccc">♥</span>
-        <span class="badge badge-b" id="nom-b">—</span>
-      </div>
-      <div class="code-salon">Code salon<br><span id="code-affiche">—</span></div>
-    </div>
-
-    <div class="statut-partenaire" id="statut-partenaire"></div>
-
-    <!-- Bandeau humeur -->
-    <a href="jeux/humeur.html" class="humeur-bandeau">
-      <div class="hb-titre">🌤️ Météo de l'humeur</div>
-      <div class="hb-duo">
-        <div class="hb-joueur">
-          <span class="hb-emoji" id="hub-emoji-moi">❓</span>
-          <span class="hb-nom"  id="hub-nom-moi">Moi</span>
-        </div>
-        <span style="color:#ddd;">·</span>
-        <div class="hb-joueur">
-          <span class="hb-emoji" id="hub-emoji-autre">❓</span>
-          <span class="hb-nom"  id="hub-nom-autre">Autre</span>
-        </div>
-      </div>
-      <span style="color:#ccc;">›</span>
-    </a>
-
-    <div class="section-titre">🎮 Les jeux</div>
-    <div class="jeux-grid">
-
-      <a href="jeux/points.html" class="jeu-card points" id="card-points">
-        <span class="notif-bulle" id="notif-points"></span>
-        <span class="emoji">🏆</span>
-        <span class="nom">Défis</span>
-        <span class="desc">Missions à accomplir</span>
-      </a>
-
-      <a href="jeux/boite.html" class="jeu-card boite" id="card-boite">
-        <span class="notif-bulle" id="notif-boite"></span>
-        <span class="emoji">🔒</span>
-        <span class="nom">Boîte Secrète</span>
-        <span class="desc">Photo ou message caché</span>
-      </a>
-
-      <a href="jeux/pictionary.html" class="jeu-card pictionary" id="card-pictionary">
-        <span class="notif-bulle" id="notif-pictionary"></span>
-        <span class="emoji">🎨</span>
-        <span class="nom">L'Artiste</span>
-        <span class="desc">Dessine un souvenir</span>
-      </a>
-
-      <a href="jeux/questions.html" class="jeu-card questions" id="card-questions">
-        <span class="notif-bulle" id="notif-questions"></span>
-        <span class="emoji">💬</span>
-        <span class="nom">36 Questions</span>
-        <span class="desc">Réponses croisées</span>
-      </a>
-
-      <a href="jeux/calendrier.html" class="jeu-card calendrier" id="card-calendrier">
-        <span class="notif-bulle" id="notif-calendrier"></span>
-        <span class="emoji">📅</span>
-        <span class="nom">Notre Calendrier</span>
-        <span class="desc">Appels & rendez-vous</span>
-      </a>
-
-      <a href="jeux/bereal.html" class="jeu-card bereal" id="card-bereal">
-        <span class="notif-bulle" id="notif-bereal"></span>
-        <span class="emoji">📸</span>
-        <span class="nom">Be Real</span>
-        <span class="desc">Photo surprise à deux</span>
-      </a>
-
-      <a href="jeux/concours.html" class="jeu-card concours" id="card-concours">
-        <span class="notif-bulle" id="notif-concours"></span>
-        <span class="emoji">🏅</span>
-        <span class="nom">Concours Photo</span>
-        <span class="desc">Le meilleur cliché gagne</span>
-      </a>
-
-      <a href="jeux/carte.html" class="jeu-card carte" id="card-carte">
-        <span class="notif-bulle" id="notif-carte"></span>
-        <span class="emoji">🗺️</span>
-        <span class="nom">Notre Carte</span>
-        <span class="desc">Lieux où aller ensemble</span>
-      </a>
-
-      <a href="jeux/escape.html" class="jeu-card escape bientot">
-        <span class="emoji">🗝️</span>
-        <span class="nom">Escape Game</span>
-        <span class="bientot-badge">Bientôt</span>
-      </a>
-
-    </div>
-
-    <hr class="sep">
-
-    <!-- Bandeau profil -->
-    <a href="jeux/profil.html" class="profil-bandeau">
-      <div class="pb-gauche">
-        <div class="pb-avatar">👤</div>
-        <div>
-          <div class="pb-nom">Profils & Stats</div>
-          <div class="pb-sub">Scores, statistiques, favoris</div>
-        </div>
-      </div>
-      <div class="pb-scores">
-        <div class="pb-score">
-          <div class="val" id="pb-score-moi">0</div>
-          <div class="lbl" id="pb-label-moi">Moi</div>
-        </div>
-        <div style="color:#ddd;">vs</div>
-        <div class="pb-score">
-          <div class="val" id="pb-score-autre">0</div>
-          <div class="lbl" id="pb-label-autre">Autre</div>
-        </div>
-      </div>
-      <span style="color:#ccc;">›</span>
-    </a>
-
-    <hr class="sep">
-    <button class="btn btn-gris" onclick="deconnecterSession()">🚪 Quitter le salon</button>
-
-  </div>
-</div>
-
-<script type="module">
-  import { getSession, ecouterSalon, deconnecter, connecterFirebase } from "./auth.js";
-  import { ecouterJeu } from "./db.js";
-
-  const session = getSession();
-  if (!session.code) { window.location.href = "index.html"; }
-  await connecterFirebase();
-
-  // ===== SALON =====
-  const stop = ecouterSalon(session.code, (data) => {
-    document.getElementById("chargement").style.display = "none";
-    document.getElementById("contenu").style.display    = "block";
-
-    const prenomA = data.joueurA?.prenom ?? "Joueur A";
-    const prenomB = data.joueurB?.prenom ?? "Joueur B";
-    document.getElementById("nom-a").textContent = prenomA;
-    document.getElementById("nom-b").textContent = data.joueurB ? prenomB : "En attente…";
-    document.getElementById("code-affiche").textContent = session.code;
-
-    const estA        = session.role === "joueurA";
-    const prenomMoi   = estA ? prenomA : prenomB;
-    const prenomAutre = estA ? prenomB : prenomA;
-    document.getElementById("hub-nom-moi").textContent   = prenomMoi;
-    document.getElementById("hub-nom-autre").textContent = prenomAutre;
-    document.getElementById("pb-label-moi").textContent   = prenomMoi;
-    document.getElementById("pb-label-autre").textContent = prenomAutre;
-
-    const sc = data.scores ?? {};
-    const cleM = estA ? "A" : "B";
-    const cleA = estA ? "B" : "A";
-    const totalMoi   = (sc.points?.[cleM]||0) + (sc.pictionary?.[cleM]||0) + (sc.concours?.[cleM]||0);
-    const totalAutre = (sc.points?.[cleA]||0) + (sc.pictionary?.[cleA]||0) + (sc.concours?.[cleA]||0);
-    document.getElementById("pb-score-moi").textContent   = totalMoi;
-    document.getElementById("pb-score-autre").textContent = totalAutre;
-
-    const statutEl = document.getElementById("statut-partenaire");
-    if (!data.joueurB) {
-      statutEl.innerHTML = `<span class="attente">⏳ En attente que l'autre joueur rejoigne…</span><br>Code : <strong>${session.code}</strong>`;
-    } else {
-      statutEl.innerHTML = `<span class="online">✓</span> ${prenomAutre} est dans le salon`;
-    }
+// Tri côté client par creeAt (tolère les null = docs en cours d'écriture)
+function trierParDate(items) {
+  return items.sort((a, b) => {
+    const ta = a.creeAt?.toMillis ? a.creeAt.toMillis() : (typeof a.creeAt === "number" ? a.creeAt : 0);
+    const tb = b.creeAt?.toMillis ? b.creeAt.toMillis() : (typeof b.creeAt === "number" ? b.creeAt : 0);
+    return ta - tb;
   });
+}
 
-  // ===== NOTIFICATIONS =====
-  const comptesParJeu = {};
-  const idsParJeu = {};
+export function refSalon(code) {
+  return doc(db, "salons", code);
+}
 
-  function majBadgeIcone() {
-    const total = Object.values(comptesParJeu).reduce((a, b) => a + b, 0);
-    if ("setAppBadge" in navigator) {
-      if (total > 0) navigator.setAppBadge(total);
-      else navigator.clearAppBadge();
-    }
+export function refJeu(code, nomJeu) {
+  return collection(db, "salons", code, nomJeu);
+}
+
+// Lecture unique du document salon
+export async function lireSalon(code) {
+  const snap = await getDoc(refSalon(code));
+  return snap.exists() ? snap.data() : null;
+}
+
+// Écoute temps réel d'une sous-collection
+// Trie côté client pour inclure les docs dont creeAt est encore null
+export function ecouterJeu(code, nomJeu, callback) {
+  const ref = refJeu(code, nomJeu);
+  return onSnapshot(ref, (snap) => {
+    const items = trierParDate(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    callback(items);
+  });
+}
+
+// Lecture unique d'une sous-collection (stats, favoris, profil)
+// Retourne [] si la collection n'existe pas encore
+export async function lireJeuUneFois(code, nomJeu) {
+  try {
+    const snap = await getDocs(refJeu(code, nomJeu));
+    return trierParDate(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  } catch (e) {
+    console.warn(`lireJeuUneFois "${nomJeu}":`, e.message);
+    return [];
   }
+}
 
-  function afficherBulle(jeu, nb) {
-    const el = document.getElementById("notif-" + jeu);
-    if (!el) return;
-    el.textContent = nb > 9 ? "9+" : String(nb);
-    el.style.display = nb > 0 ? "flex" : "none";
-    comptesParJeu[jeu] = nb;
-    majBadgeIcone();
-  }
-
-  function getIdsVus(jeu) {
-    try { return new Set(JSON.parse(localStorage.getItem("ktj_vu_" + jeu) || "[]")); }
-    catch { return new Set(); }
-  }
-
-  function marquerTousVus(jeu) {
-    const ids = idsParJeu[jeu] ?? new Set();
-    localStorage.setItem("ktj_vu_" + jeu, JSON.stringify([...ids]));
-    afficherBulle(jeu, 0);
-  }
-
-  if ("clearAppBadge" in navigator) navigator.clearAppBadge();
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) majBadgeIcone();
+// Ajouter un document
+export async function ajouterItem(code, nomJeu, data) {
+  const ref = await addDoc(refJeu(code, nomJeu), {
+    ...data,
+    creeAt: serverTimestamp()
   });
+  return ref.id;
+}
 
-  const role = session.role;
+// Modifier un document existant
+export async function modifierItem(code, nomJeu, id, data) {
+  await updateDoc(doc(db, "salons", code, nomJeu, id), data);
+}
 
-  // Défis
-  ecouterJeu(session.code, "jeu_points", (items) => {
-    idsParJeu["points"] = new Set(items.map(m => m.id));
-    const vus = getIdsVus("points");
-    afficherBulle("points", items.filter(m => m.auteur !== role && !m.validee && !vus.has(m.id)).length);
+// Supprimer un document
+export async function supprimerItem(code, nomJeu, id) {
+  await deleteDoc(doc(db, "salons", code, nomJeu, id));
+}
+
+// Mettre à jour un score global (lecture → incrémentation → écriture)
+export async function mettreAJourScore(code, jeu, role, delta) {
+  const cle  = role === "joueurA" ? "A" : "B";
+  const snap = await getDoc(refSalon(code));
+  if (!snap.exists()) return;
+  const actuel = snap.data().scores?.[jeu]?.[cle] ?? 0;
+  await updateDoc(refSalon(code), {
+    [`scores.${jeu}.${cle}`]: actuel + delta
   });
+}
 
-  // Boîte Secrète
-  ecouterJeu(session.code, "jeu_boite", (items) => {
-    idsParJeu["boite"] = new Set(items.map(b => b.id));
-    const vus = getIdsVus("boite");
-    afficherBulle("boite", items.filter(b => b.auteur !== role && !b.ouverte && !vus.has(b.id)).length);
-  });
-
-  // L'Artiste
-  ecouterJeu(session.code, "jeu_pictionary", (items) => {
-    idsParJeu["pictionary"] = new Set(items.map(d => d.id));
-    const vus = getIdsVus("pictionary");
-    afficherBulle("pictionary", items.filter(d =>
-      d.auteur !== role && d.valide === null && !d.reponse && !vus.has(d.id)
-    ).length);
-  });
-
-  // 36 Questions
-  ecouterJeu(session.code, "jeu_questions", (items) => {
-    idsParJeu["questions"] = new Set(items.map(q => q.id));
-    const vus    = getIdsVus("questions");
-    const cleMoi   = role === "joueurA" ? "reponseA" : "reponseB";
-    const cleAutre = role === "joueurA" ? "reponseB" : "reponseA";
-    afficherBulle("questions", items.filter(q => {
-      if (vus.has(q.id)) return false;
-      if (!q[cleMoi]) return true;
-      if (q[cleAutre]) return true;
-      return false;
-    }).length);
-  });
-
-  // Calendrier
-  ecouterJeu(session.code, "jeu_calendrier", (items) => {
-    idsParJeu["calendrier"] = new Set(items.map(e => e.id));
-    const vus = getIdsVus("calendrier");
-    afficherBulle("calendrier", items.filter(e => e.auteur !== role && !vus.has(e.id)).length);
-  });
-
-  // Be Real
-  ecouterJeu(session.code, "jeu_bereal", (items) => {
-    idsParJeu["bereal"] = new Set(items.map(m => m.id));
-    const DUREE_MS = 2 * 60 * 60 * 1000;
-    const actif = items.find(m => !m.expire && (Date.now() - m.lanceAt) < DUREE_MS);
-    if (!actif) { afficherBulle("bereal", 0); return; }
-    const maPhoto = role === "joueurA" ? actif.photoA : actif.photoB;
-    afficherBulle("bereal", maPhoto ? 0 : 1);
-  });
-
-  // Concours Photo
-  ecouterJeu(session.code, "jeu_concours", (items) => {
-    idsParJeu["concours"] = new Set(items.map(c => c.id));
-    const vus        = getIdsVus("concours");
-    const maPhotoCle = role === "joueurA" ? "photoA" : "photoB";
-    const monVoteCle = role === "joueurA" ? "voteA"  : "voteB";
-    afficherBulle("concours", items.filter(c => {
-      if (c.termine || vus.has(c.id)) return false;
-      if (!c[maPhotoCle]) return true;
-      if (c.photoA && c.photoB && !c[monVoteCle]) return true;
-      return false;
-    }).length);
-  });
-
-  // Notre Carte
-  ecouterJeu(session.code, "jeu_carte", (items) => {
-    idsParJeu["carte"] = new Set(items.map(p => p.id));
-    const vus = getIdsVus("carte");
-    afficherBulle("carte", items.filter(p => p.auteur !== role && !vus.has(p.id)).length);
-  });
-
-  // Humeur dans le bandeau
-  ecouterJeu(session.code, "jeu_humeur", (items) => {
-    const derniereMoi   = [...items].filter(h => h.auteur === role)
-                          .sort((a,b) => (b.horodatage||0)-(a.horodatage||0))[0];
-    const derniereAutre = [...items].filter(h => h.auteur !== role)
-                          .sort((a,b) => (b.horodatage||0)-(a.horodatage||0))[0];
-    if (derniereMoi)   document.getElementById("hub-emoji-moi").textContent   = derniereMoi.emoji;
-    if (derniereAutre) document.getElementById("hub-emoji-autre").textContent = derniereAutre.emoji;
-  });
-
-  // Marquer vus au clic
-  document.querySelectorAll(".jeu-card[id]").forEach(card => {
-    card.addEventListener("click", () => {
-      marquerTousVus(card.id.replace("card-", ""));
-    });
-  });
-
-  window.deconnecterSession = () => {
-    if (confirm("Quitter le salon ? Tu pourras le rejoindre à nouveau avec le code.")) {
-      stop();
-      deconnecter();
-    }
-  };
-</script>
-</body>
-</html>
+// Lire les scores (lecture unique)
+export async function lireScores(code) {
+  const data = await lireSalon(code);
+  return data?.scores ?? { points: { A: 0, B: 0 }, pictionary: { A: 0, B: 0 } };
+}
