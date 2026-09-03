@@ -14,8 +14,6 @@
     .salon-info .code-salon { font-size: 0.78rem; color: var(--gris); text-align: right; }
     .salon-info .code-salon span { font-weight: 700; color: var(--rose-fonce); letter-spacing: 1px; }
     .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; margin-top: 8px; }
-
-    /* Couleurs par jeu */
     .jeu-card.points     { border-color: #f9c74f; }
     .jeu-card.boite      { border-color: var(--rose); }
     .jeu-card.pictionary { border-color: #90d7ff; }
@@ -28,13 +26,10 @@
     .jeu-card.escape     { border-color: #aaa; }
     .jeu-card.bientot { opacity: 0.5; cursor: default; pointer-events: none; }
     .jeu-card .bientot-badge { font-size: 0.7rem; background: #eee; color: #999; padding: 2px 8px; border-radius: 20px; }
-
     .btn-deco { background: none; border: none; color: var(--gris); font-size: 1.3rem; cursor: pointer; padding: 4px; }
     .statut-partenaire { font-size: 0.82rem; color: var(--gris); text-align: center; margin-bottom: 16px; }
     .statut-partenaire .online  { color: var(--vert); font-weight: 700; }
     .statut-partenaire .attente { color: #f4a261; font-weight: 700; }
-
-    /* Bulles de notification */
     .jeu-card { position: relative; }
     .notif-bulle {
       position: absolute; top: -8px; right: -8px;
@@ -50,8 +45,6 @@
       0%,100% { transform: scale(1); }
       50%      { transform: scale(1.15); }
     }
-
-    /* Bandeau humeur */
     .humeur-bandeau {
       background: var(--blanc); border-radius: var(--rayon);
       box-shadow: var(--ombre); padding: 12px 16px; margin-bottom: 14px;
@@ -64,10 +57,9 @@
     .hb-duo { display: flex; gap: 16px; align-items: center; }
     .hb-joueur { display: flex; align-items: center; gap: 8px; }
     .hb-emoji { font-size: 1.4rem; }
-    .hb-nom  { font-size: 0.78rem; font-weight: 600; color: var(--noir); display: block; }
-    .hb-note { font-size: 0.68rem; color: var(--gris); font-style: italic; display: block; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-    /* Bandeau profil */
+    .hb-infos { display: flex; flex-direction: column; }
+    .hb-nom  { font-size: 0.78rem; font-weight: 600; color: var(--noir); }
+    .hb-note { font-size: 0.68rem; color: var(--gris); font-style: italic; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .profil-bandeau {
       background: var(--blanc); border-radius: var(--rayon);
       box-shadow: var(--ombre); padding: 14px 16px; margin-top: 4px;
@@ -113,7 +105,7 @@
       <div class="hb-duo">
         <div class="hb-joueur">
           <span class="hb-emoji" id="hub-emoji-moi">❓</span>
-          <div>
+          <div class="hb-infos">
             <span class="hb-nom"  id="hub-nom-moi">Moi</span>
             <span class="hb-note" id="hub-note-moi"></span>
           </div>
@@ -121,7 +113,7 @@
         <span style="color:#ddd;">·</span>
         <div class="hb-joueur">
           <span class="hb-emoji" id="hub-emoji-autre">❓</span>
-          <div>
+          <div class="hb-infos">
             <span class="hb-nom"  id="hub-nom-autre">Autre</span>
             <span class="hb-note" id="hub-note-autre"></span>
           </div>
@@ -206,7 +198,6 @@
 
     <hr class="sep">
 
-    <!-- Bandeau profil -->
     <a href="jeux/profil.html" class="profil-bandeau">
       <div class="pb-gauche">
         <div class="pb-avatar">👤</div>
@@ -244,7 +235,6 @@
 
   await connecterFirebase();
 
-  // ===== SALON =====
   const stop = ecouterSalon(session.code, (data) => {
     document.getElementById("chargement").style.display = "none";
     document.getElementById("contenu").style.display    = "block";
@@ -255,7 +245,6 @@
     document.getElementById("nom-b").textContent = data.joueurB ? prenomB : "En attente…";
     document.getElementById("code-affiche").textContent = session.code;
 
-    // Bandeau profil — prénoms et scores
     const estA        = session.role === "joueurA";
     const prenomMoi   = estA ? prenomA : prenomB;
     const prenomAutre = estA ? prenomB : prenomA;
@@ -264,7 +253,7 @@
     document.getElementById("pb-label-moi").textContent   = prenomMoi;
     document.getElementById("pb-label-autre").textContent = prenomAutre;
 
-    const sc = data.scores ?? {};
+    const sc   = data.scores ?? {};
     const cleM = estA ? "A" : "B";
     const cleA = estA ? "B" : "A";
     const totalMoi   = (sc.points?.[cleM]||0) + (sc.pictionary?.[cleM]||0) + (sc.concours?.[cleM]||0);
@@ -319,21 +308,18 @@
 
   const role = session.role;
 
-  // Défis
   ecouterJeu(session.code, "jeu_points", (items) => {
     idsParJeu["points"] = new Set(items.map(m => m.id));
     const vus = getIdsVus("points");
     afficherBulle("points", items.filter(m => m.auteur !== role && !m.validee && !vus.has(m.id)).length);
   });
 
-  // Boîte Secrète
   ecouterJeu(session.code, "jeu_boite", (items) => {
     idsParJeu["boite"] = new Set(items.map(b => b.id));
     const vus = getIdsVus("boite");
     afficherBulle("boite", items.filter(b => b.auteur !== role && !b.ouverte && !vus.has(b.id)).length);
   });
 
-  // L'Artiste
   ecouterJeu(session.code, "jeu_pictionary", (items) => {
     idsParJeu["pictionary"] = new Set(items.map(d => d.id));
     const vus = getIdsVus("pictionary");
@@ -342,7 +328,6 @@
     ).length);
   });
 
-  // 36 Questions
   ecouterJeu(session.code, "jeu_questions", (items) => {
     idsParJeu["questions"] = new Set(items.map(q => q.id));
     const vus      = getIdsVus("questions");
@@ -356,14 +341,12 @@
     }).length);
   });
 
-  // Calendrier
   ecouterJeu(session.code, "jeu_calendrier", (items) => {
     idsParJeu["calendrier"] = new Set(items.map(e => e.id));
     const vus = getIdsVus("calendrier");
     afficherBulle("calendrier", items.filter(e => e.auteur !== role && !vus.has(e.id)).length);
   });
 
-  // Be Real
   ecouterJeu(session.code, "jeu_bereal", (items) => {
     idsParJeu["bereal"] = new Set(items.map(m => m.id));
     const DUREE_MS = 2 * 60 * 60 * 1000;
@@ -373,7 +356,6 @@
     afficherBulle("bereal", maPhoto ? 0 : 1);
   });
 
-  // Concours Photo : défis où je dois encore poster ou voter
   ecouterJeu(session.code, "jeu_concours", (items) => {
     idsParJeu["concours"] = new Set(items.map(c => c.id));
     const maPhotoCle = role === "joueurA" ? "photoA" : "photoB";
@@ -386,26 +368,26 @@
     }).length);
   });
 
-  // Notre Carte
   ecouterJeu(session.code, "jeu_carte", (items) => {
     idsParJeu["carte"] = new Set(items.map(p => p.id));
     const vus = getIdsVus("carte");
     afficherBulle("carte", items.filter(p => p.auteur !== role && !vus.has(p.id)).length);
   });
 
-  // Culture G
   ecouterJeu(session.code, "jeu_culture", (items) => {
     idsParJeu["culture"] = new Set(items.map(a => a.id));
     const vus = getIdsVus("culture");
     afficherBulle("culture", items.filter(a => a.auteur !== role && !vus.has(a.id)).length);
   });
 
-  // Météo de l'humeur dans le bandeau
+  // Météo humeur — emoji + note dans le bandeau
   ecouterJeu(session.code, "jeu_humeur", (items) => {
-    const derniereMoi   = [...items].filter(h => h.auteur === role)
-                          .sort((a, b) => (b.horodatage||0) - (a.horodatage||0))[0];
-    const derniereAutre = [...items].filter(h => h.auteur !== role)
-                          .sort((a, b) => (b.horodatage||0) - (a.horodatage||0))[0];
+    const derniereMoi   = [...items]
+      .filter(h => h.auteur === role)
+      .sort((a, b) => (b.horodatage||0) - (a.horodatage||0))[0];
+    const derniereAutre = [...items]
+      .filter(h => h.auteur !== role)
+      .sort((a, b) => (b.horodatage||0) - (a.horodatage||0))[0];
     if (derniereMoi) {
       document.getElementById("hub-emoji-moi").textContent = derniereMoi.emoji;
       document.getElementById("hub-note-moi").textContent  = derniereMoi.note ? `"${derniereMoi.note}"` : "";
@@ -416,7 +398,6 @@
     }
   });
 
-  // Effacer les notifs au clic sur un jeu
   document.querySelectorAll(".jeu-card[id]").forEach(card => {
     card.addEventListener("click", () => {
       marquerTousVus(card.id.replace("card-", ""));
@@ -430,7 +411,6 @@
     }
   };
 
-  // Enregistrement du service worker
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/Keep-the-J/sw.js")
       .catch(err => console.warn("SW:", err));
