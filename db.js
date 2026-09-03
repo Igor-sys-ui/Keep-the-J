@@ -11,7 +11,6 @@ function trierParDate(items) {
     return ta - tb;
   });
 }
-
 export function refSalon(code) { return doc(db, "salons", code); }
 export function refJeu(code, nomJeu) { return collection(db, "salons", code, nomJeu); }
 
