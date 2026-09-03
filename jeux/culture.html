@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Culture G — Keep The J</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .tabs { display: flex; background: var(--gris-clair); border-radius: var(--rayon); padding: 4px; margin-bottom: 20px; }
+    .tab  { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--gris); }
+    .tab.actif { background: var(--blanc); color: var(--rose-fonce); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .sujet-aleatoire { background: linear-gradient(135deg, #9b5fc4, #c4607a); border-radius: var(--rayon); padding: 20px; color: white; margin-bottom: 20px; }
+    .sujet-aleatoire h2 { color: white; margin-bottom: 8px; font-size: 1rem; }
+    .sujet-titre { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
+    .sujet-desc  { font-size: 0.88rem; opacity: 0.9; margin-bottom: 12px; line-height: 1.5; }
+    .sujet-sources { font-size: 0.78rem; opacity: 0.85; margin-bottom: 16px; line-height: 1.6; }
+    .sujet-sources a { color: white; }
+    .btn-blanc { background: white; color: #9b5fc4; font-weight: 700; border: none; padding: 10px 16px; border-radius: var(--rayon); cursor: pointer; font-size: 0.9rem; margin-right: 8px; }
+    .form-culture { background: var(--blanc); border-radius: var(--rayon); padding: 20px; box-shadow: var(--ombre); margin-bottom: 20px; }
+    .form-culture h2 { margin-bottom: 14px; }
+    .categorie-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .cat-btn { padding: 6px 12px; border-radius: 20px; border: 1.5px solid #ddd; background: var(--blanc); font-size: 0.78rem; font-weight: 600; cursor: pointer; color: var(--gris); }
+    .cat-btn.actif { border-color: #9b5fc4; color: #9b5fc4; background: #f5f0ff; }
+    .sources-zone { background: var(--gris-clair); border-radius: 10px; padding: 12px; margin-bottom: 14px; }
+    .sources-zone label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gris); margin-bottom: 8px; display: block; }
+    .source-item { display: flex; gap: 8px; margin-bottom: 6px; }
+    .source-item input { margin-bottom: 0; flex: 1; font-size: 0.85rem; }
+    .btn-source { background: none; border: 1px solid #ddd; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 0.8rem; color: var(--gris); white-space: nowrap; }
+    .sujet-pioche { background: #f5f0ff; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; border-left: 3px solid #9b5fc4; }
+    .sujet-pioche strong { display: block; font-size: 0.88rem; color: #6a4fc4; margin-bottom: 2px; }
+    .sujet-pioche span { font-size: 0.78rem; color: #8a6fc4; }
+    .culture-card { background: var(--blanc); border-radius: var(--rayon); padding: 18px; box-shadow: var(--ombre); margin-bottom: 16px; border-left: 4px solid #9b5fc4; }
+    .culture-card.mien { border-left-color: var(--rose-fonce); }
+    .culture-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+    .culture-titre { font-weight: 700; font-size: 1rem; flex: 1; }
+    .culture-cat { font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+    .cat-philo    { background: #ede8ff; color: #6a4fc4; }
+    .cat-science  { background: #d0eaff; color: #2a6fc4; }
+    .cat-histoire { background: #fff8e1; color: #7a6000; }
+    .cat-societe  { background: #d4f4e2; color: #1a6b3c; }
+    .cat-nature   { background: #e8f5e9; color: #2e7d32; }
+    .cat-culture  { background: var(--rose-clair); color: var(--rose-fonce); }
+    .cat-autre    { background: var(--gris-clair); color: var(--gris); }
+    .culture-meta { font-size: 0.78rem; color: var(--gris); margin-bottom: 10px; }
+    .culture-texte { font-size: 0.9rem; line-height: 1.6; color: var(--noir); margin-bottom: 10px; white-space: pre-wrap; }
+    .culture-sources-list { padding-top: 8px; border-top: 1px solid #eee; margin-top: 6px; }
+    .src-titre { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--gris); margin-bottom: 4px; }
+    .culture-sources-list a    { font-size: 0.78rem; color: #9b5fc4; display: block; word-break: break-all; }
+    .culture-sources-list span { font-size: 0.78rem; color: var(--gris); display: block; }
+    .culture-actions { display: flex; gap: 6px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f5f5f5; }
+    .culture-actions .btn { width: auto; padding: 6px 12px; font-size: 0.8rem; }
+    .badge-suggere { font-size: 0.7rem; color: #9b5fc4; background: #f5f0ff; padding: 2px 8px; border-radius: 20px; display: inline-block; margin-bottom: 6px; }
+    .section-titre { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gris); margin-bottom: 12px; }
+    .vide { text-align: center; padding: 32px 0; color: #bbb; font-size: 0.9rem; }
+    #panneau-perso { display: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <a href="../app.html" class="back">←</a>
+    <h1>🧠 Culture G</h1>
+  </div>
+
+  <div class="msg msg-info" style="margin-bottom:20px;">
+    Pioche un sujet, renseigne-toi, puis écris un court résumé de ce que tu as appris. Ou propose ton propre sujet ! 📚
+  </div>
+
+  <div class="tabs">
+    <button class="tab actif" onclick="afficherOnglet('aleatoire')">🎲 Sujet aléatoire</button>
+    <button class="tab"       onclick="afficherOnglet('perso')">✏️ Mon sujet</button>
+  </div>
+
+  <div id="panneau-aleatoire">
+    <div class="sujet-aleatoire">
+      <h2>🎲 Ton sujet du moment</h2>
+      <div class="sujet-titre"   id="sujet-titre">—</div>
+      <div class="sujet-desc"    id="sujet-desc">—</div>
+      <div class="sujet-sources" id="sujet-sources"></div>
+      <button class="btn-blanc" onclick="piocherSujet()">🔀 Autre sujet</button>
+      <button class="btn-blanc" onclick="utiliserSujet()">✏️ Écrire sur ce sujet</button>
+    </div>
+  </div>
+
+  <div id="panneau-perso">
+    <div class="form-culture">
+      <h2>✏️ Écrire un article</h2>
+      <div class="sujet-pioche" id="sujet-pioche-info" style="display:none;">
+        <strong id="sujet-pioche-titre"></strong>
+        <span   id="sujet-pioche-desc"></span>
+      </div>
+      <label for="titre-article">Titre du sujet</label>
+      <input type="text" id="titre-article" placeholder="Ex : Socrate, Le mansplaining, Les frelons…">
+      <label>Catégorie</label>
+      <div class="categorie-row">
+        <button class="cat-btn actif" data-cat="philo"    onclick="setCategorie('philo',this)">🧠 Philo</button>
+        <button class="cat-btn"       data-cat="science"  onclick="setCategorie('science',this)">🔬 Science</button>
+        <button class="cat-btn"       data-cat="histoire" onclick="setCategorie('histoire',this)">📜 Histoire</button>
+        <button class="cat-btn"       data-cat="societe"  onclick="setCategorie('societe',this)">🌍 Société</button>
+        <button class="cat-btn"       data-cat="nature"   onclick="setCategorie('nature',this)">🌿 Nature</button>
+        <button class="cat-btn"       data-cat="culture"  onclick="setCategorie('culture',this)">🎭 Culture</button>
+        <button class="cat-btn"       data-cat="autre"    onclick="setCategorie('autre',this)">💡 Autre</button>
+      </div>
+      <label for="texte-article">Ton résumé</label>
+      <textarea id="texte-article" placeholder="Écris ce que tu as appris en quelques lignes…" style="min-height:140px;"></textarea>
+      <div class="sources-zone">
+        <label>📎 Sources consultées (optionnel)</label>
+        <div id="liste-sources">
+          <div class="source-item">
+            <input type="text" placeholder="Titre ou URL" class="source-input">
+            <button class="btn-source" onclick="supprimerSource(this)">✕</button>
+          </div>
+        </div>
+        <button class="btn-source" onclick="ajouterSource()" style="margin-top:6px;">+ Ajouter une source</button>
+      </div>
+      <div id="msg-culture"></div>
+      <button class="btn btn-rose" onclick="publierArticle()" style="background:#9b5fc4;">Publier mon article 🧠</button>
+    </div>
+  </div>
+
+  <div class="section-titre">📚 Les articles (<span id="nb-articles">0</span>)</div>
+  <div id="fil-culture"><div class="spinner">Chargement…</div></div>
+
+</div>
+<script type="module">
+  import { getSession, connecterFirebase } from "../auth.js";
+  import { ecouterJeu, ajouterItem, supprimerItem, lireSalon } from "../db.js";
+  import { chargerMesFavoris, estDejaFavori, toggleFavori } from "../favoris.js";
+
+  const session = getSession();
+  if (!session.code) { window.location.href = "../index.html"; }
+  await connecterFirebase();
+  await chargerMesFavoris(session.code, session.role);
+
+  let prenoms = { A: "Joueur A", B: "Joueur B" };
+  let categorieCourante = "philo";
+  let sujetActuel = null;
+
+  const salon = await lireSalon(session.code);
+  if (salon) {
+    prenoms.A = salon.joueurA?.prenom ?? "Joueur A";
+    prenoms.B = salon.joueurB?.prenom ?? "Joueur B";
+  }
+
+  const SUJETS = [
+    { titre: "Socrate", cat: "philo",
+      desc: "Philosophe grec condamné à mort pour avoir mis en doute les croyances de son époque. Que signifie 'je sais que je ne sais rien' ?",
+      sources: ["https://www.philomag.com/articles/socrate-lhomme-qui-ne-savait-rien", "Wikipedia : Socrate"] },
+    { titre: "L'épistocratie", cat: "philo",
+      desc: "Et si le vote était réservé aux citoyens les mieux informés ? Jason Brennan défend cette idée dans 'Against Democracy'. Bonne ou mauvaise idée ?",
+      sources: ["https://www.lemonde.fr/idees/article/2017/02/11/l-epistocratie-un-remede-pire-que-le-mal_5078224_3232.html"] },
+    { titre: "Peut-on grandir sans se trahir ?", cat: "philo",
+      desc: "Arte Philosophie explore si évoluer implique forcément de renier ce qu'on était. Qui sommes-nous si nous changeons constamment ?",
+      sources: ["https://www.youtube.com/watch?v=7sEb4TgrBXc", "Wikipedia : Identité personnelle"] },
+    { titre: "Est-ce que vouloir un beau corps c'est superficiel ?", cat: "philo",
+      desc: "Platon, Descartes, Sartre ont tous pensé le corps différemment. Le désir d'un beau corps est-il vanité ou quête de soi ?",
+      sources: ["https://www.philomag.com/articles/notre-corps-nous-appartient-il", "Platon, Le Banquet"] },
+    { titre: "Le stoïcisme au quotidien", cat: "philo",
+      desc: "Marc Aurèle, Épictète, Sénèque : comment leur philosophie aide-t-elle à traverser les difficultés ? Une sagesse étonnamment actuelle.",
+      sources: ["https://www.youtube.com/watch?v=Yhn1Fe8cT0Q", "Épictète, Manuel"] },
+    { titre: "L'épicurisme", cat: "philo",
+      desc: "Épicure enseignait que le bonheur est l'absence de douleur et la simplicité. Une philosophie souvent réduite au seul plaisir, injustement.",
+      sources: ["Wikipedia : Épicure", "https://www.cairn.info/revue-philosophique-2004-2-page-159.htm"] },
+    { titre: "Le mansplaining", cat: "societe",
+      desc: "Terme popularisé par Rebecca Solnit : quand un homme explique quelque chose à une femme de façon condescendante. Comment le reconnaître ?",
+      sources: ["Rebecca Solnit, Les hommes m'expliquent la vie", "https://www.liberation.fr/societe/"] },
+    { titre: "L'origine du conflit israélo-palestinien", cat: "histoire",
+      desc: "Des Ottomans à la déclaration Balfour, du mandat britannique à 1948 : les racines historiques d'un conflit qui dure depuis plus d'un siècle.",
+      sources: ["https://www.herodote.net/La_question_palestinienne-synthese-2577.php", "Wikipedia : Conflit israélo-palestinien"] },
+    { titre: "Le biais de confirmation", cat: "societe",
+      desc: "On retient ce qui confirme nos croyances. Ce biais cognitif explique en partie les chambres d'écho et la radicalisation en ligne.",
+      sources: ["https://www.youtube.com/watch?v=6OLPL5p0fMg", "Wikipedia : Biais de confirmation"] },
+    { titre: "La solastalgie", cat: "societe",
+      desc: "Néologisme du philosophe Glenn Albrecht : la détresse causée par les changements de son environnement familier, notamment climatiques.",
+      sources: ["https://www.nationalgeographic.fr/environnement/2019/10/cest-quoi-la-solastalgie"] },
+    { titre: "Le revenu universel de base", cat: "societe",
+      desc: "Verser un revenu à tous les citoyens, inconditionnellement. Utopie ou solution d'avenir ? Les expériences en Finlande et au Kenya donnent des pistes.",
+      sources: ["https://www.lemonde.fr/economie/article/2019/07/05/finlande-les-premiers-enseignements-du-revenu-de-base_5486072_3234.html"] },
+    { titre: "L'effet placebo", cat: "science",
+      desc: "Comment une pilule de sucre peut-elle guérir ? L'effet placebo est réel, mesurable, et remet en question notre compréhension du lien corps-esprit.",
+      sources: ["https://www.youtube.com/watch?v=z03FQGlGgo0", "Wikipedia : Effet placebo"] },
+    { titre: "La théorie des cordes", cat: "science",
+      desc: "Et si les particules fondamentales n'étaient pas des points mais des cordes vibrantes ? La théorie la plus ambitieuse — et controversée — de la physique.",
+      sources: ["Brian Greene, L'Univers élégant", "https://www.youtube.com/watch?v=Da-2h2B4faU"] },
+    { titre: "L'intelligence des plantes", cat: "science",
+      desc: "Les plantes communiquent par signaux chimiques, 'mémorisent' des expériences. Sont-elles intelligentes à leur façon ?",
+      sources: ["Stefano Mancuso, L'intelligence des plantes", "https://www.sciencesetavenir.fr/nature-environnement/plantes/"] },
+    { titre: "Les trous noirs", cat: "science",
+      desc: "Depuis la première image obtenue en 2019, notre compréhension a évolué. Qu'est-ce qu'un trou noir réellement ? Qu'arrive-t-il à ce qui y tombe ?",
+      sources: ["https://www.youtube.com/watch?v=e-P5IFTqB98", "NASA : Black Holes"] },
+    { titre: "Le scarabée tortue d'or", cat: "nature",
+      desc: "Cet insecte d'Amérique du Nord peut changer de couleur en quelques secondes — de l'or brillant au rouge brun. Un mécanisme de défense fascinant.",
+      sources: ["https://www.nationalgeographic.com/animals/invertebrates/facts/golden-tortoise-beetle", "Wikipedia : Charidotella sexpunctata"] },
+    { titre: "Les frelons", cat: "nature",
+      desc: "Prédateurs redoutables ou maillon indispensable ? Le frelon européen régule les insectes. Le frelon asiatique, lui, décime les ruches.",
+      sources: ["https://www.futura-sciences.com/planete/dossiers/zoologie-insectes-piqueurs-2287/", "Wikipedia : Frelon"] },
+    { titre: "La symbiose mycorhizienne", cat: "nature",
+      desc: "Les arbres d'une forêt sont connectés par un réseau de champignons souterrains. Ce 'wood wide web' permet de partager nutriments et signaux.",
+      sources: ["Merlin Sheldrake, L'ordre enchevêtré", "https://www.youtube.com/watch?v=iSpglxHTJVM"] },
+    { titre: "La migration des oiseaux", cat: "nature",
+      desc: "Comment les oiseaux migrateurs s'orientent sur des milliers de kilomètres ? Champ magnétique, étoiles, repères visuels — un mystère partiellement résolu.",
+      sources: ["Wikipedia : Migration des oiseaux", "https://www.youtube.com/watch?v=PBKQ9GrFECg"] },
+    { titre: "L'Impressionnisme", cat: "culture",
+      desc: "Monet, Renoir, Degas : des artistes rejetés qui ont révolutionné la peinture en capturant la lumière et l'instant plutôt que la forme parfaite.",
+      sources: ["https://www.musee-orsay.fr/fr/collections/regards-sur-les-collections/impressionnisme.html"] },
+    { titre: "Le jazz et la ségrégation", cat: "culture",
+      desc: "Né dans les quartiers noirs de La Nouvelle-Orléans, le jazz a traversé les barrières raciales de l'Amérique ségrégationniste.",
+      sources: ["Ken Burns, Jazz (documentaire PBS)", "Wikipedia : Histoire du jazz"] },
+    { titre: "L'art de la Renaissance", cat: "culture",
+      desc: "Pourquoi la Renaissance italienne a-t-elle bouleversé l'art occidental ? De Botticelli à Michel-Ange, qu'est-ce qui a changé dans le regard sur l'homme ?",
+      sources: ["https://www.louvre.fr/decouvrir/le-musee/collections/peintures-italiennes", "Wikipedia : Renaissance"] },
+    { titre: "L'esclavage dans l'Antiquité", cat: "histoire",
+      desc: "Athènes, Rome : l'esclavage était central dans les civilisations qui ont fondé notre vision de la démocratie. Comment le comprendre aujourd'hui ?",
+      sources: ["Moses Finley, Esclavage antique et idéologie moderne", "https://www.herodote.net/L_esclavage_dans_l_Antiquite-article-544.php"] },
+    { titre: "Le FOMO", cat: "societe",
+      desc: "'Fear Of Missing Out' — la peur de rater quelque chose. Comment les réseaux sociaux ont amplifié cette anxiété et comment s'en protéger.",
+      sources: ["https://www.psychologies.com/Bien-etre/Prevention/Hygiene-de-vie/Articles-et-Dossiers/FOMO-la-peur-de-rater-quelque-chose"] },
+  ];
+
+  function piocherSujet() {
+    sujetActuel = SUJETS[Math.floor(Math.random() * SUJETS.length)];
+    document.getElementById("sujet-titre").textContent = sujetActuel.titre;
+    document.getElementById("sujet-desc").textContent  = sujetActuel.desc;
+    const srcEl = document.getElementById("sujet-sources");
+    if (sujetActuel.sources.length > 0) {
+      srcEl.innerHTML = "📎 Sources suggérées : " + sujetActuel.sources.map(s =>
+        s.startsWith("http") ? `<a href="${s}" target="_blank">${s}</a>` : s
+      ).join(" &nbsp;·&nbsp; ");
+    } else { srcEl.textContent = ""; }
+  }
+  piocherSujet();
+  window.piocherSujet = piocherSujet;
+
+  window.utiliserSujet = () => {
+    if (!sujetActuel) return;
+    afficherOnglet("perso");
+    document.getElementById("titre-article").value = sujetActuel.titre;
+    setCategorie(sujetActuel.cat, document.querySelector(`.cat-btn[data-cat="${sujetActuel.cat}"]`));
+    const listeSrc = document.getElementById("liste-sources");
+    listeSrc.innerHTML = "";
+    (sujetActuel.sources.length ? sujetActuel.sources : [""]).forEach(src => {
+      const div = document.createElement("div");
+      div.className = "source-item";
+      div.innerHTML = `<input type="text" placeholder="Titre ou URL" class="source-input" value="${src}">
+                       <button class="btn-source" onclick="supprimerSource(this)">✕</button>`;
+      listeSrc.appendChild(div);
+    });
+    const info = document.getElementById("sujet-pioche-info");
+    document.getElementById("sujet-pioche-titre").textContent = sujetActuel.titre;
+    document.getElementById("sujet-pioche-desc").textContent  = sujetActuel.desc;
+    info.style.display = "block";
+  };
+
+  window.afficherOnglet = (onglet) => {
+    document.getElementById("panneau-aleatoire").style.display = onglet === "aleatoire" ? "block" : "none";
+    document.getElementById("panneau-perso").style.display     = onglet === "perso"     ? "block" : "none";
+    document.querySelectorAll(".tabs .tab").forEach((t, i) => {
+      t.classList.toggle("actif", (i === 0 && onglet === "aleatoire") || (i === 1 && onglet === "perso"));
+    });
+  };
+
+  window.setCategorie = (cat, el) => {
+    categorieCourante = cat;
+    document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("actif"));
+    if (el) el.classList.add("actif");
+  };
+
+  window.ajouterSource = () => {
+    const div = document.createElement("div");
+    div.className = "source-item";
+    div.innerHTML = `<input type="text" placeholder="Titre ou URL" class="source-input">
+                     <button class="btn-source" onclick="supprimerSource(this)">✕</button>`;
+    document.getElementById("liste-sources").appendChild(div);
+  };
+
+  window.supprimerSource = (btn) => {
+    const liste = document.getElementById("liste-sources");
+    const item  = btn.closest(".source-item");
+    if (liste.children.length > 1) item.remove();
+    else item.querySelector("input").value = "";
+  };
+
+  window.publierArticle = async () => {
+    const titre = document.getElementById("titre-article").value.trim();
+    const texte = document.getElementById("texte-article").value.trim();
+    const msgEl = document.getElementById("msg-culture");
+    if (!titre) { msgEl.innerHTML = `<div class="msg msg-err">Donne un titre à ton article.</div>`; return; }
+    if (!texte) { msgEl.innerHTML = `<div class="msg msg-err">Écris ton résumé avant de publier.</div>`; return; }
+    const sources = [...document.querySelectorAll(".source-input")]
+      .map(i => i.value.trim()).filter(Boolean);
+    const sujetSuggere = document.getElementById("sujet-pioche-info").style.display !== "none"
+      ? document.getElementById("sujet-pioche-titre").textContent : null;
+    try {
+      msgEl.innerHTML = `<div class="msg msg-info">Publication…</div>`;
+      await ajouterItem(session.code, "jeu_culture", {
+        titre, texte, sources, categorie: categorieCourante,
+        auteur: session.role, sujetSuggere
+      });
+      document.getElementById("titre-article").value = "";
+      document.getElementById("texte-article").value = "";
+      document.getElementById("sujet-pioche-info").style.display = "none";
+      document.getElementById("liste-sources").innerHTML =
+        `<div class="source-item"><input type="text" placeholder="Titre ou URL" class="source-input"><button class="btn-source" onclick="supprimerSource(this)">✕</button></div>`;
+      setCategorie("philo", document.querySelector('.cat-btn[data-cat="philo"]'));
+      msgEl.innerHTML = `<div class="msg msg-ok">Article publié ! 🧠</div>`;
+      setTimeout(() => msgEl.innerHTML = "", 2500);
+      afficherOnglet("aleatoire");
+    } catch(e) {
+      msgEl.innerHTML = `<div class="msg msg-err">Erreur : ${e.message}</div>`;
+    }
+  };
+
+  window.toggleFavoriCulture = async (id, apercu) => {
+    const btn    = document.getElementById("fav-" + id);
+    const ajoute = await toggleFavori(session.code, session.role, "jeu_culture", id, apercu);
+    if (btn) btn.textContent = ajoute ? "❤️" : "🤍";
+  };
+
+  window.supprimerArticle = async (id) => {
+    if (!confirm("Supprimer cet article ?")) return;
+    await supprimerItem(session.code, "jeu_culture", id);
+  };
+
+  const CAT_INFO = {
+    philo:    { label: "🧠 Philo",    cls: "cat-philo" },
+    science:  { label: "🔬 Science",  cls: "cat-science" },
+    histoire: { label: "📜 Histoire", cls: "cat-histoire" },
+    societe:  { label: "🌍 Société",  cls: "cat-societe" },
+    nature:   { label: "🌿 Nature",   cls: "cat-nature" },
+    culture:  { label: "🎭 Culture",  cls: "cat-culture" },
+    autre:    { label: "💡 Autre",    cls: "cat-autre" },
+  };
+
+  ecouterJeu(session.code, "jeu_culture", (articles) => {
+    document.getElementById("nb-articles").textContent = articles.length;
+    const fil = document.getElementById("fil-culture");
+    if (articles.length === 0) {
+      fil.innerHTML = `<div class="vide">Aucun article pour l'instant.<br>Pioche un sujet et lance-toi ! 🧠</div>`;
+      return;
+    }
+    fil.innerHTML = [...articles].reverse().map(a => {
+      const estMien      = a.auteur === session.role;
+      const prenomAuteur = a.auteur === "joueurA" ? prenoms.A : prenoms.B;
+      const cat          = CAT_INFO[a.categorie] ?? CAT_INFO.autre;
+      const dejafav      = estDejaFavori("jeu_culture", a.id);
+      const apercuFav    = a.titre.replace(/'/g,"").substring(0, 80);
+      const sourcesHtml  = a.sources?.length
+        ? `<div class="culture-sources-list">
+            <div class="src-titre">📎 Sources</div>
+            ${a.sources.map(s => s.startsWith("http")
+              ? `<a href="${s}" target="_blank" rel="noopener">${s}</a>`
+              : `<span>${s}</span>`).join("")}
+           </div>` : "";
+      const sujetBadge = a.sujetSuggere
+        ? `<div class="badge-suggere">🎲 Sujet suggéré : ${a.sujetSuggere}</div>` : "";
+      return `
+        <div class="culture-card ${estMien ? "mien" : ""}">
+          <div class="culture-header">
+            <div class="culture-titre">${a.titre}</div>
+            <span class="culture-cat ${cat.cls}">${cat.label}</span>
+          </div>
+          ${sujetBadge}
+          <div class="culture-meta">Par <strong>${prenomAuteur}</strong></div>
+          <div class="culture-texte">${a.texte}</div>
+          ${sourcesHtml}
+          <div class="culture-actions">
+            <button class="btn btn-danger" onclick="supprimerArticle('${a.id}')">🗑</button>
+            <button id="fav-${a.id}"
+              onclick="toggleFavoriCulture('${a.id}','${apercuFav}')"
+              style="background:none;border:none;font-size:1.2rem;cursor:pointer;padding:4px;"
+              title="Favori">${dejafav ? "❤️" : "🤍"}</button>
+          </div>
+        </div>`;
+    }).join("");
+  });
+</script>
+</body>
+</html>
